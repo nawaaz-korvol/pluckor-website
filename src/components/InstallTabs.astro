@@ -1,0 +1,152 @@
+---
+const tabs = [
+  { id: 'claude', label: 'Claude Code' },
+  { id: 'cursor', label: 'Cursor' },
+  { id: 'codex', label: 'Codex' },
+  { id: 'mcp', label: 'Any MCP host' },
+];
+---
+
+<div class="tabs" data-tabs>
+  <div class="tabs-bar" role="tablist" aria-label="Install for your agent">
+    {
+      tabs.map((t, i) => (
+        <button
+          class:list={['tab', { 'is-active': i === 0 }]}
+          role="tab"
+          id={`tab-${t.id}`}
+          aria-controls={`panel-${t.id}`}
+          aria-selected={i === 0 ? 'true' : 'false'}
+          data-tab={t.id}
+        >
+          {t.label}
+        </button>
+      ))
+    }
+  </div>
+
+  <div class="tabs-panels">
+    <!-- Claude Code -->
+    <div class="panel is-active" role="tabpanel" id="panel-claude" aria-labelledby="tab-claude" data-panel="claude">
+      <p class="panel-lead">One step. The plugin registers the MCP server <em>and</em> the skill together.</p>
+      <pre class="block"><code>/plugin marketplace add pluckor/pluckor-plugin
+/plugin install pluckor@pluckor</code></pre>
+      <p class="panel-note">MCP-only alternative: <code>claude mcp add pluckor -- npx -y pluckor mcp</code>, then copy <code>SKILL.md</code> to <code>~/.claude/skills/pluckor/</code>.</p>
+    </div>
+
+    <!-- Cursor -->
+    <div class="panel" role="tabpanel" id="panel-cursor" aria-labelledby="tab-cursor" data-panel="cursor" hidden>
+      <p class="panel-lead">Add the MCP server, then drop in the skill.</p>
+      <p class="panel-sub">1 — <code>~/.cursor/mcp.json</code> (global) or <code>.cursor/mcp.json</code> (project):</p>
+      <pre class="block"><code>&#123; "mcpServers": &#123; "pluckor": &#123; "command": "npx", "args": ["-y", "pluckor", "mcp"] &#125; &#125; &#125;</code></pre>
+      <p class="panel-sub">2 — put <code>SKILL.md</code> at <code>.cursor/skills/pluckor/SKILL.md</code>.</p>
+    </div>
+
+    <!-- Codex -->
+    <div class="panel" role="tabpanel" id="panel-codex" aria-labelledby="tab-codex" data-panel="codex" hidden>
+      <p class="panel-lead">Register the server via the CLI, then add the skill.</p>
+      <pre class="block"><code>codex mcp add pluckor -- npx -y pluckor mcp</code></pre>
+      <p class="panel-note">Skill: put <code>SKILL.md</code> at <code>~/.codex/skills/pluckor/</code> (personal) or <code>.agents/skills/pluckor/</code> (project).</p>
+    </div>
+
+    <!-- Any MCP host -->
+    <div class="panel" role="tabpanel" id="panel-mcp" aria-labelledby="tab-mcp" data-panel="mcp" hidden>
+      <p class="panel-lead">Pluckor speaks plain MCP over stdio — point any host at it.</p>
+      <pre class="block"><code>&#123;
+  "mcpServers": &#123;
+    "pluckor": &#123; "command": "npx", "args": ["-y", "pluckor", "mcp"] &#125;
+  &#125;
+&#125;</code></pre>
+      <p class="panel-note">Requires <strong>Node ≥ 20.11</strong>. The first tool call downloads Chrome for Testing (~150&nbsp;MB); later runs reuse the cache.</p>
+    </div>
+  </div>
+</div>
+
+<style>
+  .tabs {
+    border: 1px solid var(--line);
+    border-radius: var(--r-lg);
+    background: var(--bg-2);
+    overflow: hidden;
+  }
+  .tabs-bar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.25rem;
+    padding: 0.4rem;
+    border-bottom: 1px solid var(--line-2);
+    background: rgba(242, 236, 223, 0.015);
+  }
+  .tab {
+    font-family: var(--font-mono);
+    font-size: 0.78rem;
+    color: var(--fg-dim);
+    padding: 0.55rem 0.95rem;
+    border-radius: var(--r);
+    transition: color 0.18s, background 0.18s;
+  }
+  .tab:hover { color: var(--amber-hi); }
+  .tab.is-active {
+    color: var(--amber);
+    background: rgba(255, 158, 61, 0.08);
+    box-shadow: inset 0 0 0 1px var(--line-hi);
+  }
+  .tabs-panels { padding: clamp(1.25rem, 3vw, 2rem); }
+  .panel { display: none; animation: fade 0.35s var(--ease-out); }
+  .panel.is-active { display: block; }
+  @keyframes fade {
+    from { opacity: 0; transform: translateY(6px); }
+    to { opacity: 1; transform: none; }
+  }
+  .panel-lead {
+    font-size: 1.02rem;
+    color: var(--fg);
+    margin-bottom: 1.1rem;
+  }
+  .panel-lead em { color: var(--amber); font-style: normal; }
+  .panel-sub {
+    font-family: var(--font-mono);
+    font-size: 0.78rem;
+    color: var(--fg-faint);
+    margin: 1.1rem 0 0.5rem;
+  }
+  .block {
+    background: var(--bg-inset);
+    border: 1px solid var(--line-2);
+    border-radius: var(--r);
+    padding: 1rem 1.15rem;
+    overflow-x: auto;
+    font-family: var(--font-mono);
+    font-size: 0.8rem;
+    line-height: 1.65;
+    color: var(--phosphor);
+  }
+  .panel-note {
+    margin-top: 1.1rem;
+    font-size: 0.88rem;
+    color: var(--fg-faint);
+  }
+  .panel-note code, .panel-sub code { color: var(--amber-hi); }
+</style>
+
+<script>
+  document.querySelectorAll<HTMLElement>('[data-tabs]').forEach((root) => {
+    const tabs = root.querySelectorAll<HTMLButtonElement>('.tab');
+    const panels = root.querySelectorAll<HTMLElement>('.panel');
+    tabs.forEach((tab) => {
+      tab.addEventListener('click', () => {
+        const id = tab.dataset.tab;
+        tabs.forEach((t) => {
+          const on = t === tab;
+          t.classList.toggle('is-active', on);
+          t.setAttribute('aria-selected', on ? 'true' : 'false');
+        });
+        panels.forEach((p) => {
+          const on = p.dataset.panel === id;
+          p.classList.toggle('is-active', on);
+          p.hidden = !on;
+        });
+      });
+    });
+  });
+</script>

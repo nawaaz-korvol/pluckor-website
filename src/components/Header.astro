@@ -1,0 +1,90 @@
+---
+const { active = '' } = Astro.props as { active?: string };
+
+const links = [
+  { href: '/docs/getting-started/', label: 'docs', key: 'docs' },
+  { href: '/docs/tools/', label: 'tools', key: 'tools' },
+  { href: 'https://www.npmjs.com/package/pluckor', label: 'npm', ext: true },
+  { href: 'https://github.com/pluckor/pluckor-plugin', label: 'github', ext: true },
+];
+---
+
+<header class="site-header">
+  <div class="wrap header-inner">
+    <a class="brand" href="/" aria-label="Pluckor home">
+      <span class="brand-dot" aria-hidden="true"></span>
+      <span class="brand-name">pluckor</span>
+    </a>
+    <nav class="nav" aria-label="Main">
+      {
+        links.map((l) => (
+          <a
+            href={l.href}
+            class:list={['nav-link', { 'is-active': l.key === active }]}
+            target={l.ext ? '_blank' : undefined}
+            rel={l.ext ? 'noopener' : undefined}
+          >
+            {l.label}
+            {l.ext && <span class="ext" aria-hidden="true">↗</span>}
+          </a>
+        ))
+      }
+    </nav>
+  </div>
+</header>
+
+<style>
+  .site-header {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    background: color-mix(in srgb, var(--bg) 82%, transparent);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    border-bottom: 1px solid var(--line-2);
+  }
+  .header-inner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 3.75rem;
+  }
+  .brand {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.6rem;
+    font-family: var(--font-mono);
+    font-weight: 700;
+    font-size: 1rem;
+    letter-spacing: -0.01em;
+  }
+  .brand-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: var(--amber);
+    box-shadow: 0 0 10px var(--glow), 0 0 22px var(--glow-soft);
+    animation: pulse 3.2s ease-in-out infinite;
+  }
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.55; }
+  }
+  .nav {
+    display: flex;
+    align-items: center;
+    gap: clamp(0.75rem, 2.5vw, 1.75rem);
+  }
+  .nav-link {
+    font-family: var(--font-mono);
+    font-size: 0.8rem;
+    color: var(--fg-dim);
+    transition: color 0.2s;
+    display: inline-flex;
+    align-items: baseline;
+    gap: 0.25em;
+  }
+  .nav-link:hover { color: var(--amber-hi); }
+  .nav-link.is-active { color: var(--amber); }
+  .ext { font-size: 0.7em; opacity: 0.6; }
+</style>

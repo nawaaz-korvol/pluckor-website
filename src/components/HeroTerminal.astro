@@ -1,0 +1,179 @@
+---
+// A self-driving CRT terminal that replays a real Pluckor session:
+// the Cloudflare-protected G2 extraction the tool was proven on.
+---
+
+<div class="term" role="img" aria-label="An AI agent driving Pluckor: navigating a Cloudflare-protected page, waiting for content, and extracting structured JSON">
+  <div class="term-chrome">
+    <span class="term-light term-light--r"></span>
+    <span class="term-light term-light--y"></span>
+    <span class="term-light term-light--g"></span>
+    <span class="term-title">agent session — pluckor mcp</span>
+    <span class="term-rec">● LIVE</span>
+  </div>
+  <div class="term-body" id="term-body" aria-hidden="true">
+    <div class="term-lines" id="term-lines"></div>
+    <span class="term-cursor" id="term-cursor"></span>
+  </div>
+</div>
+
+<script>
+  type Line = { text: string; cls: string; type?: boolean; pause?: number };
+
+  // ~ the real session: navigate → settle past Cloudflare → wait → run_js → JSON
+  const SCRIPT: Line[] = [
+    { text: '▸ navigate { url: "https://www.g2.com/categories/mortgage-crm" }', cls: 'call', type: true },
+    { text: '  ⣷ challenge detected — "Just a moment…"', cls: 'warn', pause: 700 },
+    { text: '  ⣷ real browser · real profile · waiting it out', cls: 'dim', pause: 900 },
+    { text: '  ✓ settled: true · onChallenge: false', cls: 'ok', pause: 500 },
+    { text: '▸ wait_for_selector { selector: ".product-card" }', cls: 'call', type: true },
+    { text: '  ✓ found: true · waitedMs: 1240', cls: 'ok', pause: 400 },
+    { text: '▸ run_js { expression: "[...document.querySelectorAll(…)].map(…)" }', cls: 'call', type: true },
+    { text: '  ✓ value ↓', cls: 'ok', pause: 350 },
+    { text: '  [', cls: 'json' },
+    { text: '    { "rank": 1, "name": "Shape MortgageSoft", "rating": 4.7 },', cls: 'json', pause: 120 },
+    { text: '    { "rank": 2, "name": "Jungo",             "rating": 4.4 },', cls: 'json', pause: 120 },
+    { text: '    { "rank": 3, "name": "BNTouch",           "rating": 4.6 },', cls: 'json', pause: 120 },
+    { text: '    …', cls: 'json', pause: 120 },
+    { text: '  ]', cls: 'json', pause: 500 },
+    { text: '— extracted through Cloudflare. no CDP on reads. no webdriver flag. —', cls: 'sig', pause: 3200 },
+  ];
+
+  const linesEl = document.getElementById('term-lines')!;
+  const bodyEl = document.getElementById('term-body')!;
+  const cursorEl = document.getElementById('term-cursor')!;
+  const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+
+  function addLine(cls: string): HTMLDivElement {
+    const el = document.createElement('div');
+    el.className = `tl tl--${cls}`;
+    linesEl.appendChild(el);
+    // keep the newest line in view
+    bodyEl.scrollTop = bodyEl.scrollHeight;
+    return el;
+  }
+
+  async function typeInto(el: HTMLDivElement, text: string) {
+    for (let i = 0; i < text.length; i++) {
+      el.textContent += text[i];
+      if (i % 2 === 0) bodyEl.scrollTop = bodyEl.scrollHeight;
+      await sleep(10 + Math.random() * 22);
+    }
+  }
+
+  async function run() {
+    if (reduced) {
+      // static render for reduced motion
+      for (const line of SCRIPT) addLine(line.cls).textContent = line.text;
+      cursorEl.style.display = 'none';
+      return;
+    }
+    // eslint-disable-next-line no-constant-condition
+    while (true) {
+      linesEl.innerHTML = '';
+      for (const line of SCRIPT) {
+        const el = addLine(line.cls);
+        if (line.type) await typeInto(el, line.text);
+        else el.textContent = line.text;
+        await sleep(line.pause ?? 260);
+      }
+    }
+  }
+  run();
+</script>
+
+<style>
+  .term {
+    background: var(--bg-inset);
+    border: 1px solid var(--line);
+    border-radius: var(--r-xl);
+    overflow: hidden;
+    box-shadow:
+      0 0 0 1px rgba(0, 0, 0, 0.5),
+      0 30px 80px -30px rgba(0, 0, 0, 0.8),
+      0 0 90px -20px var(--glow-soft),
+      inset 0 1px 0 rgba(242, 236, 223, 0.05);
+    position: relative;
+  }
+  /* curved-glass sheen */
+  .term::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background:
+      radial-gradient(120% 60% at 50% -10%, rgba(255, 210, 154, 0.05), transparent 60%),
+      linear-gradient(115deg, transparent 40%, rgba(242, 236, 223, 0.015) 45%, transparent 52%);
+    border-radius: inherit;
+  }
+  .term-chrome {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.7rem 1rem;
+    border-bottom: 1px solid var(--line-2);
+    background: rgba(242, 236, 223, 0.02);
+  }
+  .term-light {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    opacity: 0.75;
+  }
+  .term-light--r { background: #e8674f; }
+  .term-light--y { background: var(--amber); }
+  .term-light--g { background: #8aa864; }
+  .term-title {
+    flex: 1;
+    text-align: center;
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+    color: var(--fg-faint);
+    letter-spacing: 0.06em;
+  }
+  .term-rec {
+    font-family: var(--font-mono);
+    font-size: 0.62rem;
+    color: var(--block);
+    letter-spacing: 0.12em;
+    animation: rec-blink 2s ease-in-out infinite;
+  }
+  @keyframes rec-blink {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.35; }
+  }
+  .term-body {
+    padding: 1.1rem 1.2rem 1.3rem;
+    height: 21.5rem;
+    overflow: hidden;
+    font-family: var(--font-mono);
+    font-size: clamp(0.68rem, 1.4vw, 0.8rem);
+    line-height: 1.75;
+  }
+  .term-lines :global(.tl) { white-space: pre-wrap; word-break: break-word; }
+  .term-lines :global(.tl--call) { color: var(--fg); font-weight: 700; }
+  .term-lines :global(.tl--ok)   { color: var(--phosphor); text-shadow: 0 0 12px var(--glow-soft); }
+  .term-lines :global(.tl--warn) { color: var(--block); }
+  .term-lines :global(.tl--dim)  { color: var(--fg-faint); }
+  .term-lines :global(.tl--json) { color: var(--amber-hi); opacity: 0.92; }
+  .term-lines :global(.tl--sig)  {
+    color: var(--fg-ghost);
+    font-style: italic;
+    margin-top: 0.5em;
+  }
+  .term-cursor {
+    display: inline-block;
+    width: 0.55em;
+    height: 1.1em;
+    background: var(--amber);
+    vertical-align: text-bottom;
+    animation: blink 1.05s steps(1) infinite;
+    box-shadow: 0 0 8px var(--glow);
+  }
+  @keyframes blink {
+    0%, 55% { opacity: 1; }
+    56%, 100% { opacity: 0; }
+  }
+</style>

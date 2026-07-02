@@ -1,0 +1,284 @@
+---
+import Base from './Base.astro';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+import { docsNav, docsOrder } from '../docs-nav';
+
+const { frontmatter } = Astro.props;
+const title: string = frontmatter?.title ?? 'Docs';
+const description: string | undefined = frontmatter?.description;
+const kicker: string | undefined = frontmatter?.kicker;
+
+const path = Astro.url.pathname.replace(/\/$/, '') + '/';
+const norm = (h: string) => h.replace(/\/$/, '') + '/';
+
+const idx = docsOrder.findIndex((d) => norm(d.href) === path);
+const prev = idx > 0 ? docsOrder[idx - 1] : null;
+const next = idx >= 0 && idx < docsOrder.length - 1 ? docsOrder[idx + 1] : null;
+---
+
+<Base title={`${title} · Pluckor docs`} description={description}>
+  <Header active="docs" />
+
+  <div class="docs">
+    <aside class="docs-side">
+      <nav class="docs-nav" aria-label="Documentation">
+        <a class="docs-home" href="/">← home</a>
+        {
+          docsNav.map((group) => (
+            <div class="docs-group">
+              <span class="docs-group-title">{group.title}</span>
+              <ul>
+                {group.items.map((item) => (
+                  <li>
+                    <a
+                      href={item.href}
+                      class:list={['docs-link', { 'is-active': norm(item.href) === path }]}
+                    >
+                      {item.label}
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ))
+        }
+      </nav>
+    </aside>
+
+    <main class="docs-main">
+      <article class="prose">
+        <div class="doc-head">
+          {kicker && <p class="kicker">{kicker}</p>}
+          <h1 class="doc-title">{title}</h1>
+          {description && <p class="doc-lede">{description}</p>}
+        </div>
+        <slot />
+      </article>
+
+      <nav class="doc-pager" aria-label="Pagination">
+        {
+          prev ? (
+            <a class="pager pager--prev" href={prev.href}>
+              <span class="pager-dir">← prev</span>
+              <span class="pager-label">{prev.label}</span>
+            </a>
+          ) : (
+            <span />
+          )
+        }
+        {
+          next ? (
+            <a class="pager pager--next" href={next.href}>
+              <span class="pager-dir">next →</span>
+              <span class="pager-label">{next.label}</span>
+            </a>
+          ) : (
+            <span />
+          )
+        }
+      </nav>
+    </main>
+  </div>
+
+  <Footer />
+</Base>
+
+<style>
+  .docs {
+    max-width: var(--maxw);
+    margin-inline: auto;
+    padding-inline: var(--gutter);
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 2.5rem;
+    align-items: start;
+  }
+  @media (min-width: 900px) {
+    .docs { grid-template-columns: 220px 1fr; gap: 3.5rem; }
+  }
+
+  /* ---------------- sidebar ---------------- */
+  .docs-side {
+    position: sticky;
+    top: 3.75rem;
+    align-self: start;
+    padding-top: 2.5rem;
+  }
+  @media (max-width: 899px) {
+    .docs-side {
+      position: static;
+      padding-top: 2rem;
+      border-bottom: 1px solid var(--line-2);
+      padding-bottom: 1.5rem;
+    }
+  }
+  .docs-home {
+    display: inline-block;
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    color: var(--fg-faint);
+    margin-bottom: 1.5rem;
+    transition: color 0.2s;
+  }
+  .docs-home:hover { color: var(--amber); }
+  .docs-group { margin-bottom: 1.5rem; }
+  .docs-group-title {
+    font-family: var(--font-mono);
+    font-size: 0.65rem;
+    text-transform: uppercase;
+    letter-spacing: 0.2em;
+    color: var(--fg-ghost);
+  }
+  .docs-group ul { list-style: none; padding: 0; margin: 0.7rem 0 0; }
+  .docs-group li { margin: 0; }
+  .docs-link {
+    display: block;
+    font-size: 0.9rem;
+    color: var(--fg-dim);
+    padding: 0.32rem 0 0.32rem 0.8rem;
+    border-left: 2px solid var(--line-2);
+    transition: color 0.18s, border-color 0.18s;
+  }
+  .docs-link:hover { color: var(--amber-hi); border-left-color: var(--line); }
+  .docs-link.is-active {
+    color: var(--amber);
+    border-left-color: var(--amber);
+    font-weight: 600;
+  }
+
+  /* ---------------- main ---------------- */
+  .docs-main { padding-top: 2.5rem; padding-bottom: 4rem; min-width: 0; }
+  .doc-head { margin-bottom: 2.5rem; padding-bottom: 2rem; border-bottom: 1px solid var(--line-2); }
+  .doc-title {
+    font-family: var(--font-display);
+    font-size: clamp(2rem, 5vw, 3.2rem);
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    line-height: 1;
+    margin-top: 0.9rem;
+  }
+  .doc-lede {
+    margin-top: 1.1rem;
+    font-size: 1.15rem;
+    color: var(--fg-dim);
+    line-height: 1.5;
+    max-width: 60ch;
+  }
+
+  /* ---------------- pager ---------------- */
+  .doc-pager {
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-top: 4rem;
+    padding-top: 2rem;
+    border-top: 1px solid var(--line-2);
+  }
+  .pager {
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+    padding: 1rem 1.25rem;
+    border: 1px solid var(--line);
+    border-radius: var(--r-lg);
+    transition: border-color 0.2s, transform 0.2s var(--ease);
+    max-width: 48%;
+  }
+  .pager:hover { border-color: var(--line-hi); transform: translateY(-2px); }
+  .pager--next { text-align: right; margin-left: auto; }
+  .pager-dir { font-family: var(--font-mono); font-size: 0.7rem; color: var(--amber); letter-spacing: 0.05em; }
+  .pager-label { font-size: 0.95rem; color: var(--fg); }
+</style>
+
+<!-- markdown prose styling (global so it reaches slotted MDX content) -->
+<style is:global>
+  .prose { font-size: 1.02rem; line-height: 1.7; color: var(--fg-dim); }
+  .prose > * + * { margin-top: 1.15rem; }
+  .prose h2, .prose h3, .prose h4 {
+    color: var(--fg);
+    font-family: var(--font-display);
+    letter-spacing: -0.02em;
+    scroll-margin-top: 5rem;
+  }
+  .prose h2 {
+    font-size: clamp(1.5rem, 3vw, 2rem);
+    font-weight: 800;
+    margin-top: 3rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--line-2);
+  }
+  .prose h3 { font-size: 1.3rem; font-weight: 700; margin-top: 2.25rem; }
+  .prose h4 { font-size: 1.05rem; font-weight: 700; margin-top: 1.75rem; color: var(--fg); }
+  .prose p { color: var(--fg-dim); }
+  .prose strong { color: var(--fg); font-weight: 600; }
+  .prose em { color: var(--fg); }
+  .prose a {
+    color: var(--amber);
+    text-decoration: underline;
+    text-decoration-color: rgba(255, 158, 61, 0.35);
+    text-underline-offset: 3px;
+    transition: text-decoration-color 0.2s;
+  }
+  .prose a:hover { text-decoration-color: var(--amber); }
+  .prose ul, .prose ol { padding-left: 1.4rem; }
+  .prose li { margin-top: 0.4rem; }
+  .prose li::marker { color: var(--amber-dim); }
+  .prose blockquote {
+    border-left: 2px solid var(--amber);
+    padding: 0.5rem 0 0.5rem 1.25rem;
+    color: var(--fg);
+    background: linear-gradient(90deg, rgba(255, 158, 61, 0.05), transparent 70%);
+    border-radius: 0 var(--r) var(--r) 0;
+  }
+  .prose blockquote p { color: var(--fg); }
+  .prose hr { border: none; border-top: 1px solid var(--line-2); margin: 2.5rem 0; }
+
+  /* code blocks (shiki) */
+  .prose pre {
+    background: var(--bg-inset) !important;
+    border: 1px solid var(--line);
+    border-radius: var(--r-lg);
+    padding: 1.15rem 1.3rem;
+    overflow-x: auto;
+    font-size: 0.85rem;
+    line-height: 1.65;
+    box-shadow: 0 24px 60px -40px rgba(0, 0, 0, 0.8);
+  }
+  .prose pre code { font-family: var(--font-mono); font-size: inherit; background: none; border: none; padding: 0; }
+  .prose :not(pre) > code {
+    background: var(--bg-inset);
+    border: 1px solid var(--line-2);
+    color: var(--amber-hi);
+    padding: 0.12em 0.42em;
+    border-radius: 4px;
+    font-size: 0.86em;
+  }
+
+  /* tables */
+  .prose table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.92rem;
+    margin-block: 0.5rem;
+    display: block;
+    overflow-x: auto;
+  }
+  .prose th, .prose td {
+    text-align: left;
+    padding: 0.7rem 0.9rem;
+    border-bottom: 1px solid var(--line-2);
+    vertical-align: top;
+  }
+  .prose th {
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--amber);
+    border-bottom-color: var(--line);
+  }
+  .prose td code { white-space: nowrap; }
+
+  /* callout: use blockquotes starting with **Note** etc via plain blockquote */
+</style>

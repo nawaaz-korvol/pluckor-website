@@ -1,0 +1,614 @@
+---
+import Base from '../layouts/Base.astro';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+import HeroTerminal from '../components/HeroTerminal.astro';
+import InstallTabs from '../components/InstallTabs.astro';
+import CopyCommand from '../components/CopyCommand.astro';
+
+const tools = [
+  { name: 'navigate', desc: 'Load a URL. Waits for load and settles past Cloudflare-style interstitials.', cdp: false },
+  { name: 'get_html', desc: 'Rendered HTML of the page or a selector — content script, no CDP, no fingerprint.', cdp: false },
+  { name: 'wait_for_selector', desc: 'Wait until a selector appears (optionally visible), or time out.', cdp: false },
+  { name: 'run_js', desc: 'Evaluate JS in the page and get its JSON value back. The structured extractor.', cdp: true },
+  { name: 'click', desc: 'Trusted click at an element’s center — isTrusted = true.', cdp: true },
+  { name: 'type', desc: 'Trusted text entry that fires real input events. React and Vue see it.', cdp: true },
+  { name: 'scroll', desc: 'Scroll for lazy-load and infinite feeds. Wheel by default, gesture on demand.', cdp: true },
+];
+
+const walls = [
+  { code: '403', label: 'datacenter IPs', body: 'Playwright and scrapers run from cloud ranges that get blocked on sight.' },
+  { code: 'JS', label: 'headless tells', body: 'navigator.webdriver, HeadlessChrome UA, CDP flags — all detectable.' },
+  { code: '☁', label: 'Cloudflare & DataDome', body: '“Just a moment…” interstitials that never clear for a bot.' },
+  { code: '🔒', label: 'login walls', body: 'Content behind a session a throwaway browser will never have.' },
+];
+---
+
+<Base title="Pluckor — give an AI agent a real browser">
+  <Header active="home" />
+
+  <!-- ================= HERO ================= -->
+  <section class="hero gridlines">
+    <div class="hero-glow" aria-hidden="true"></div>
+    <div class="wrap hero-grid">
+      <div class="hero-copy">
+        <p class="kicker" data-reveal>MCP server · real Chrome</p>
+        <h1 class="h-display hero-title" data-reveal style="--reveal-delay: 80ms">
+          <span class="hero-l1">THE AGENT’S</span>
+          <span class="hero-l2 crt-glow">BROWSER</span>
+        </h1>
+        <p class="lede hero-lede" data-reveal style="--reveal-delay: 180ms">
+          Hand an AI agent a <strong>real</strong> Chrome — one it reads the way a
+          person’s screen does. Extract from sites that block headless, Playwright,
+          and datacenter scrapers. <span class="amber">Even Cloudflare.</span>
+        </p>
+        <div class="hero-cta" data-reveal style="--reveal-delay: 260ms">
+          <a class="btn btn--primary" href="/docs/getting-started/">▸ get started</a>
+          <a class="btn btn--ghost" href="https://github.com/pluckor/pluckor-plugin" target="_blank" rel="noopener">⎔ star on github</a>
+        </div>
+        <div class="hero-install" data-reveal style="--reveal-delay: 340ms">
+          <CopyCommand command="npx -y pluckor mcp" />
+        </div>
+      </div>
+
+      <div class="hero-term" data-reveal style="--reveal-delay: 220ms">
+        <HeroTerminal />
+      </div>
+    </div>
+
+    <div class="wrap hero-strip" data-reveal style="--reveal-delay: 440ms">
+      <span class="hero-strip-lead">reads leave</span>
+      <span class="tag">navigator.webdriver = false</span>
+      <span class="tag">no CDP on reads</span>
+      <span class="tag">real profile · residential IP</span>
+      <span class="tag">isTrusted clicks</span>
+    </div>
+  </section>
+
+  <!-- ================= THE WALL ================= -->
+  <section class="section" id="why">
+    <div class="wrap">
+      <div class="sec-head" data-reveal>
+        <p class="kicker">the problem</p>
+        <h2 class="h2">The best data sits behind a wall<br />built to stop robots.</h2>
+        <p class="lede sec-lede">
+          Every serious anti-bot stack is tuned to catch exactly what automation
+          looks like. A headless browser or a datacenter request trips them before
+          you read a single row.
+        </p>
+      </div>
+      <div class="wall-grid">
+        {
+          walls.map((w, i) => (
+            <div class="wall-card" data-reveal style={`--reveal-delay: ${i * 70}ms`}>
+              <span class="wall-code">{w.code}</span>
+              <span class="wall-label">{w.label}</span>
+              <p class="wall-body">{w.body}</p>
+            </div>
+          ))
+        }
+      </div>
+      <p class="wall-turn" data-reveal>
+        Pluckor doesn’t out-trick the wall. <span class="amber">It isn’t a robot.</span>
+        It’s a real browser on your machine, driven from the inside.
+      </p>
+    </div>
+  </section>
+
+  <!-- ================= BRAIN · MEDIUM · HANDS ================= -->
+  <section class="section pipeline-sec" id="how">
+    <div class="wrap">
+      <div class="sec-head" data-reveal>
+        <p class="kicker">how it works</p>
+        <h2 class="h2">Brain, medium, hands.</h2>
+        <p class="lede sec-lede">
+          The agent decides. The bridge carries the message. The browser does the
+          reaching. Three parts, one clean loop.
+        </p>
+      </div>
+
+      <div class="pipeline" data-reveal>
+        <div class="pl-node">
+          <span class="pl-role">brain</span>
+          <span class="pl-name">agent</span>
+          <span class="pl-sub">Claude · Cursor · Codex</span>
+        </div>
+        <div class="pl-wire"><span class="pl-flow"></span><span class="pl-proto">MCP / stdio</span></div>
+        <div class="pl-node">
+          <span class="pl-role">medium</span>
+          <span class="pl-name">bridge</span>
+          <span class="pl-sub">plk daemon · localhost</span>
+        </div>
+        <div class="pl-wire"><span class="pl-flow" style="animation-delay:.6s"></span><span class="pl-proto">WebSocket</span></div>
+        <div class="pl-node pl-node--hands">
+          <span class="pl-role">hands</span>
+          <span class="pl-name">chrome</span>
+          <span class="pl-sub">real profile · your IP</span>
+        </div>
+      </div>
+
+      <div class="pipeline-notes">
+        <div class="pn" data-reveal>
+          <span class="pn-k">reads</span>
+          <p><code>navigate</code>, <code>get_html</code>, <code>wait_for_selector</code> run through a content script — <strong>no CDP, no automation fingerprint.</strong></p>
+        </div>
+        <div class="pn" data-reveal style="--reveal-delay: 90ms">
+          <span class="pn-k">interactions</span>
+          <p><code>run_js</code>, <code>click</code>, <code>type</code> attach <code>chrome.debugger</code> only while they run — trusted input, then detach.</p>
+        </div>
+        <div class="pn" data-reveal style="--reveal-delay: 180ms">
+          <span class="pn-k">everything local</span>
+          <p>The browser binds to <code>127.0.0.1</code> only. It’s never exposed off-box; the window opens on your machine.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= TOOLS ================= -->
+  <section class="section" id="tools">
+    <div class="wrap">
+      <div class="sec-head" data-reveal>
+        <p class="kicker">the surface</p>
+        <h2 class="h2">Seven tools. One session.</h2>
+        <p class="lede sec-lede">
+          Small, sharp, composable. The golden path is
+          <code>navigate → wait_for_selector → get_html / run_js → click / type → re-extract</code>.
+        </p>
+      </div>
+      <div class="tool-grid">
+        {
+          tools.map((t, i) => (
+            <div class="tool-card card" data-reveal style={`--reveal-delay: ${(i % 3) * 60}ms`}>
+              <div class="tool-top">
+                <code class="tool-name">{t.name}</code>
+                <span class:list={['tool-badge', t.cdp ? 'is-cdp' : 'is-read']}>
+                  {t.cdp ? 'CDP' : 'read'}
+                </span>
+              </div>
+              <p class="tool-desc">{t.desc}</p>
+            </div>
+          ))
+        }
+        <a class="tool-card tool-card--more card" href="/docs/tools/" data-reveal>
+          <span class="tool-more-txt">full reference</span>
+          <span class="tool-more-arrow">→</span>
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= THE MOAT ================= -->
+  <section class="section moat-sec gridlines" id="moat">
+    <div class="wrap moat-grid">
+      <div class="moat-copy" data-reveal>
+        <p class="kicker">the moat</p>
+        <h2 class="h2">Not stealthier.<br /><span class="amber">Just real.</span></h2>
+        <p class="lede">
+          Detection catches <em>how</em> a browser is driven — automation flags, a
+          throwaway profile, CDP on every call. Pluckor launches Chrome for Testing
+          with none of that and reads from inside the page. There’s simply less to
+          detect.
+        </p>
+        <a class="btn btn--ghost moat-btn" href="/docs/how-it-works/">read how it works →</a>
+      </div>
+      <div class="moat-proof">
+        <div class="proof" data-reveal>
+          <span class="proof-val">false</span>
+          <span class="proof-key">navigator.webdriver</span>
+        </div>
+        <div class="proof" data-reveal style="--reveal-delay: 70ms">
+          <span class="proof-val">true</span>
+          <span class="proof-key">isTrusted on clicks</span>
+        </div>
+        <div class="proof" data-reveal style="--reveal-delay: 140ms">
+          <span class="proof-val">0</span>
+          <span class="proof-key">CDP calls on reads</span>
+        </div>
+        <div class="proof" data-reveal style="--reveal-delay: 210ms">
+          <span class="proof-val">∞</span>
+          <span class="proof-key">persistent profile · logins survive</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= INSTALL ================= -->
+  <section class="section" id="install">
+    <div class="wrap">
+      <div class="sec-head sec-head--center" data-reveal>
+        <p class="kicker">install</p>
+        <h2 class="h2">Point your agent at it.</h2>
+        <p class="lede sec-lede sec-lede--center">
+          The MCP server ships as the <code>pluckor</code> npm package. The skill —
+          the patterns that make an agent reliably good at extraction — ships with it.
+        </p>
+      </div>
+      <div class="install-wrap" data-reveal>
+        <InstallTabs />
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= RECIPE ================= -->
+  <section class="section recipe-sec" id="recipe">
+    <div class="wrap recipe-grid">
+      <div class="recipe-copy" data-reveal>
+        <p class="kicker">proven</p>
+        <h2 class="h2">A Cloudflare-protected listing,<br />pulled clean.</h2>
+        <p class="lede">
+          The real session behind the hero: navigate a Cloudflare-gated G2 category,
+          wait out the challenge, and extract a ranked product list — then walk each
+          detail page for precise ratings. One browser, one persistent session.
+        </p>
+        <a class="btn btn--ghost" href="/docs/recipes/">see the full recipe →</a>
+      </div>
+      <div class="recipe-code" data-reveal style="--reveal-delay: 120ms">
+        <pre class="recipe-pre"><code><span class="c-call">navigate</span>          &#123; url: <span class="c-str">"https://www.g2.com/categories/mortgage-crm"</span> &#125;
+<span class="c-call">wait_for_selector</span> &#123; selector: <span class="c-str">".product-card"</span> &#125;
+<span class="c-call">run_js</span>            &#123; expression:
+  <span class="c-str">"[...document.querySelectorAll('.product-card')]</span>
+<span class="c-str">     .map(c =&gt; c.querySelector('a[href*=/products/]')?.textContent)"</span> &#125;
+
+<span class="c-out">→ ["Shape MortgageSoft", "Jungo", "BNTouch", …]</span></code></pre>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= FINAL CTA ================= -->
+  <section class="section cta-sec">
+    <div class="wrap cta" data-reveal>
+      <div class="cta-glow" aria-hidden="true"></div>
+      <p class="kicker">start</p>
+      <h2 class="h2 cta-title">Give your agent<br />a browser it can’t be caught with.</h2>
+      <div class="hero-cta cta-actions">
+        <a class="btn btn--primary" href="/docs/getting-started/">▸ get started</a>
+        <a class="btn btn--ghost" href="https://www.npmjs.com/package/pluckor" target="_blank" rel="noopener">view on npm ↗</a>
+      </div>
+      <div class="cta-cmd"><CopyCommand command="/plugin marketplace add pluckor/pluckor-plugin" prompt="›" label="claude code — one step" /></div>
+    </div>
+  </section>
+
+  <Footer />
+</Base>
+
+<style>
+  /* ---------------- HERO ---------------- */
+  .hero {
+    position: relative;
+    padding-top: clamp(3rem, 7vw, 6rem);
+    padding-bottom: clamp(2.5rem, 5vw, 4rem);
+    overflow: hidden;
+  }
+  .hero-glow {
+    position: absolute;
+    top: -20%;
+    left: 8%;
+    width: 55%;
+    height: 90%;
+    background: radial-gradient(closest-side, var(--glow-soft), transparent 72%);
+    filter: blur(30px);
+    pointer-events: none;
+  }
+  .hero-grid {
+    position: relative;
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: clamp(2.5rem, 5vw, 4rem);
+    align-items: center;
+  }
+  @media (min-width: 960px) {
+    .hero-grid { grid-template-columns: 1.05fr 1fr; }
+  }
+  .hero-title { margin: 1.4rem 0 1.5rem; }
+  .hero-l1 { display: block; color: var(--fg); }
+  .hero-l2 { display: block; color: var(--amber); }
+  .hero-lede strong { color: var(--fg); font-weight: 600; }
+  .hero-cta { display: flex; flex-wrap: wrap; gap: 0.75rem; }
+  .hero-install { margin-top: 1.5rem; max-width: 22rem; }
+
+  .hero-strip {
+    position: relative;
+    margin-top: clamp(2.5rem, 5vw, 4rem);
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--line-2);
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.6rem;
+  }
+  .hero-strip-lead {
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.16em;
+    color: var(--fg-ghost);
+    margin-right: 0.4rem;
+  }
+
+  /* ---------------- SECTION HEADS ---------------- */
+  .sec-head { max-width: 52rem; margin-bottom: clamp(2.5rem, 5vw, 4rem); }
+  .sec-head .h2 { margin: 1rem 0 1.25rem; }
+  .sec-head--center { margin-inline: auto; text-align: center; }
+  .sec-head--center .kicker { justify-content: center; }
+  .sec-lede { max-width: 46ch; }
+  .sec-lede--center { margin-inline: auto; }
+  .sec-lede code, .hero-lede code { color: var(--amber-hi); font-size: 0.88em; }
+
+  /* ---------------- WALL ---------------- */
+  .wall-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 1rem;
+  }
+  .wall-card {
+    border: 1px solid var(--line);
+    border-left: 2px solid var(--block);
+    border-radius: var(--r);
+    padding: 1.4rem;
+    background: linear-gradient(180deg, var(--block-dim), transparent 60%);
+    transition: border-color 0.25s, transform 0.25s var(--ease);
+  }
+  .wall-card:hover { transform: translateY(-3px); border-left-color: var(--block); }
+  .wall-code {
+    font-family: var(--font-mono);
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: var(--block);
+    display: block;
+  }
+  .wall-label {
+    display: block;
+    font-family: var(--font-mono);
+    font-size: 0.78rem;
+    letter-spacing: 0.04em;
+    color: var(--fg);
+    margin: 0.6rem 0 0.5rem;
+  }
+  .wall-body { font-size: 0.9rem; color: var(--fg-faint); line-height: 1.55; }
+  .wall-turn {
+    margin-top: 2.5rem;
+    font-family: var(--font-display);
+    font-size: clamp(1.25rem, 3vw, 1.9rem);
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    max-width: 30ch;
+    line-height: 1.2;
+  }
+
+  /* ---------------- PIPELINE ---------------- */
+  .pipeline-sec { background: var(--bg-2); border-block: 1px solid var(--line-2); }
+  .pipeline {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0;
+    margin-bottom: clamp(2.5rem, 5vw, 3.5rem);
+  }
+  @media (min-width: 820px) {
+    .pipeline { flex-direction: row; align-items: center; }
+  }
+  .pl-node {
+    flex: 1;
+    background: var(--bg-3);
+    border: 1px solid var(--line);
+    border-radius: var(--r-lg);
+    padding: 1.5rem;
+    text-align: center;
+    position: relative;
+  }
+  .pl-node--hands {
+    border-color: var(--line-hi);
+    box-shadow: 0 0 60px -25px var(--glow);
+  }
+  .pl-role {
+    font-family: var(--font-mono);
+    font-size: 0.68rem;
+    text-transform: uppercase;
+    letter-spacing: 0.22em;
+    color: var(--amber);
+  }
+  .pl-name {
+    display: block;
+    font-family: var(--font-display);
+    font-size: 1.7rem;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    margin: 0.4rem 0 0.35rem;
+  }
+  .pl-sub { font-family: var(--font-mono); font-size: 0.72rem; color: var(--fg-faint); }
+  .pl-wire {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 2.5rem;
+    padding: 0.75rem;
+  }
+  @media (min-width: 820px) {
+    .pl-wire { flex: 0.5; min-height: auto; }
+    .pl-wire::before {
+      content: '';
+      position: absolute;
+      left: 0; right: 0; top: 50%;
+      height: 1px;
+      background: linear-gradient(90deg, var(--line), var(--line-hi), var(--line));
+    }
+  }
+  .pl-wire::after {
+    content: '';
+    position: absolute;
+    left: 50%; top: 0; bottom: 0;
+    width: 1px;
+    background: linear-gradient(180deg, var(--line), var(--line-hi), var(--line));
+  }
+  @media (min-width: 820px) { .pl-wire::after { display: none; } }
+  .pl-flow {
+    position: absolute;
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    background: var(--amber);
+    box-shadow: 0 0 12px var(--glow);
+    animation: flow-v 2.4s var(--ease) infinite;
+  }
+  @keyframes flow-v {
+    0% { top: 0; opacity: 0; }
+    20% { opacity: 1; }
+    80% { opacity: 1; }
+    100% { top: 100%; opacity: 0; }
+  }
+  @media (min-width: 820px) {
+    .pl-flow { animation-name: flow-h; }
+    @keyframes flow-h {
+      0% { left: 0; opacity: 0; }
+      20% { opacity: 1; }
+      80% { opacity: 1; }
+      100% { left: 100%; opacity: 0; }
+    }
+  }
+  .pl-proto {
+    font-family: var(--font-mono);
+    font-size: 0.64rem;
+    letter-spacing: 0.08em;
+    color: var(--fg-ghost);
+    background: var(--bg-2);
+    padding: 0.2rem 0.5rem;
+    position: relative;
+    z-index: 1;
+  }
+
+  .pipeline-notes {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 1.25rem;
+  }
+  .pn { border-top: 1px solid var(--line); padding-top: 1rem; }
+  .pn-k {
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    color: var(--amber);
+  }
+  .pn p { margin-top: 0.6rem; font-size: 0.92rem; color: var(--fg-dim); line-height: 1.55; }
+  .pn code { color: var(--amber-hi); font-size: 0.85em; }
+  .pn strong { color: var(--fg); font-weight: 600; }
+
+  /* ---------------- TOOLS ---------------- */
+  .tool-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 1rem;
+  }
+  .tool-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.8rem; }
+  .tool-name { font-size: 1rem; font-weight: 700; color: var(--amber-hi); }
+  .tool-badge {
+    font-family: var(--font-mono);
+    font-size: 0.6rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    padding: 0.2em 0.55em;
+    border-radius: 999px;
+    border: 1px solid var(--line);
+  }
+  .tool-badge.is-read { color: var(--phosphor); border-color: rgba(255, 183, 94, 0.35); }
+  .tool-badge.is-cdp { color: var(--fg-faint); }
+  .tool-desc { font-size: 0.9rem; color: var(--fg-dim); line-height: 1.55; }
+  .tool-card--more {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: transparent;
+    border-style: dashed;
+  }
+  .tool-more-txt { font-family: var(--font-mono); color: var(--fg-dim); }
+  .tool-more-arrow { color: var(--amber); font-size: 1.2rem; transition: transform 0.2s; }
+  .tool-card--more:hover .tool-more-arrow { transform: translateX(4px); }
+
+  /* ---------------- MOAT ---------------- */
+  .moat-sec { background: var(--bg-2); border-block: 1px solid var(--line-2); }
+  .moat-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: clamp(2.5rem, 5vw, 4rem);
+    align-items: center;
+  }
+  @media (min-width: 900px) { .moat-grid { grid-template-columns: 1fr 1fr; } }
+  .moat-copy .h2 { margin: 1rem 0 1.25rem; }
+  .moat-copy .lede em { color: var(--fg); font-style: normal; }
+  .moat-btn { margin-top: 1.75rem; }
+  .moat-proof {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+  }
+  .proof {
+    background: var(--bg-inset);
+    border: 1px solid var(--line);
+    border-radius: var(--r-lg);
+    padding: 1.5rem 1.25rem;
+    text-align: left;
+  }
+  .proof-val {
+    display: block;
+    font-family: var(--font-mono);
+    font-size: clamp(1.6rem, 4vw, 2.4rem);
+    font-weight: 700;
+    color: var(--amber);
+    text-shadow: 0 0 22px var(--glow-soft);
+    line-height: 1;
+  }
+  .proof-key { display: block; margin-top: 0.7rem; font-family: var(--font-mono); font-size: 0.72rem; color: var(--fg-faint); line-height: 1.4; }
+
+  /* ---------------- INSTALL ---------------- */
+  .install-wrap { max-width: 760px; margin-inline: auto; }
+
+  /* ---------------- RECIPE ---------------- */
+  .recipe-sec { background: var(--bg-2); border-block: 1px solid var(--line-2); }
+  .recipe-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: clamp(2rem, 4vw, 3.5rem);
+    align-items: center;
+  }
+  @media (min-width: 900px) { .recipe-grid { grid-template-columns: 0.9fr 1.1fr; } }
+  .recipe-copy .h2 { margin: 1rem 0 1.25rem; }
+  .recipe-pre {
+    background: var(--bg-inset);
+    border: 1px solid var(--line);
+    border-radius: var(--r-lg);
+    padding: 1.5rem;
+    overflow-x: auto;
+    font-family: var(--font-mono);
+    font-size: 0.78rem;
+    line-height: 1.7;
+    color: var(--fg-dim);
+    box-shadow: 0 30px 70px -40px rgba(0,0,0,0.8);
+  }
+  .c-call { color: var(--fg); font-weight: 700; }
+  .c-str { color: var(--amber-hi); }
+  .c-out { color: var(--phosphor); }
+
+  /* ---------------- CTA ---------------- */
+  .cta-sec { padding-bottom: clamp(5rem, 10vw, 9rem); }
+  .cta {
+    position: relative;
+    text-align: center;
+    border: 1px solid var(--line);
+    border-radius: var(--r-xl);
+    padding: clamp(3rem, 7vw, 5.5rem) clamp(1.5rem, 5vw, 4rem);
+    background: var(--bg-2);
+    overflow: hidden;
+  }
+  .cta-glow {
+    position: absolute;
+    top: -40%; left: 50%;
+    transform: translateX(-50%);
+    width: 70%; height: 120%;
+    background: radial-gradient(closest-side, var(--glow-soft), transparent 70%);
+    pointer-events: none;
+  }
+  .cta .kicker { justify-content: center; }
+  .cta-title { position: relative; margin: 1rem auto 2rem; max-width: 20ch; }
+  .cta-actions { justify-content: center; position: relative; }
+  .cta-cmd { position: relative; max-width: 30rem; margin: 2.5rem auto 0; text-align: left; }
+</style>

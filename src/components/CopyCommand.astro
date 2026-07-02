@@ -1,0 +1,95 @@
+---
+interface Props {
+  command: string;
+  prompt?: string;
+  label?: string;
+}
+const { command, prompt = '$', label } = Astro.props;
+---
+
+<div class="cmd" data-cmd={command}>
+  {label && <span class="cmd-label">{label}</span>}
+  <div class="cmd-row">
+    <code class="cmd-text"><span class="cmd-prompt">{prompt}</span>{command}</code>
+    <button class="cmd-copy" type="button" aria-label="Copy command">
+      <span class="cmd-copy-txt">copy</span>
+    </button>
+  </div>
+</div>
+
+<style>
+  .cmd { width: 100%; }
+  .cmd-label {
+    display: block;
+    font-family: var(--font-mono);
+    font-size: 0.68rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--fg-ghost);
+    margin-bottom: 0.5rem;
+  }
+  .cmd-row {
+    display: flex;
+    align-items: stretch;
+    gap: 0.5rem;
+    background: var(--bg-inset);
+    border: 1px solid var(--line);
+    border-radius: var(--r);
+    padding: 0.15rem 0.15rem 0.15rem 0.9rem;
+    transition: border-color 0.2s;
+  }
+  .cmd-row:hover { border-color: var(--line-hi); }
+  .cmd-text {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    gap: 0.6em;
+    font-size: 0.82rem;
+    color: var(--fg);
+    background: none;
+    border: none;
+    padding: 0.55rem 0;
+    overflow-x: auto;
+    white-space: nowrap;
+    scrollbar-width: none;
+  }
+  .cmd-text::-webkit-scrollbar { display: none; }
+  .cmd-prompt { color: var(--amber); user-select: none; }
+  .cmd-copy {
+    flex: none;
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    padding: 0 0.9rem;
+    border-radius: calc(var(--r) - 1px);
+    color: var(--fg-dim);
+    background: rgba(242, 236, 223, 0.04);
+    transition: color 0.18s, background 0.18s;
+  }
+  .cmd-copy:hover { color: var(--amber-hi); background: rgba(255, 158, 61, 0.08); }
+  .cmd-copy.is-done { color: var(--phosphor); }
+</style>
+
+<script>
+  document.querySelectorAll<HTMLElement>('.cmd').forEach((cmd) => {
+    const btn = cmd.querySelector<HTMLButtonElement>('.cmd-copy');
+    const txt = cmd.querySelector<HTMLElement>('.cmd-copy-txt');
+    const value = cmd.dataset.cmd ?? '';
+    if (!btn || !txt) return;
+    btn.addEventListener('click', async () => {
+      try {
+        await navigator.clipboard.writeText(value);
+        const prev = txt.textContent;
+        txt.textContent = 'copied ✓';
+        btn.classList.add('is-done');
+        setTimeout(() => {
+          txt.textContent = prev;
+          btn.classList.remove('is-done');
+        }, 1600);
+      } catch {
+        /* clipboard blocked — no-op */
+      }
+    });
+  });
+</script>
