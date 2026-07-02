@@ -5,7 +5,7 @@ import sitemap from '@astrojs/sitemap';
 
 // Static site — deploys to Vercel (or any static host) with no adapter.
 export default defineConfig({
-  site: 'https://pluckor.dev',
+  site: 'https://pluckor.com',
   integrations: [mdx(), sitemap()],
   redirects: {
     '/docs': '/docs/getting-started',
