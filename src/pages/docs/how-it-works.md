@@ -27,6 +27,7 @@ This split is the heart of Pluckor's stealth:
 
 - **Reads** — `navigate`, `get_html`, `wait_for_selector` — run through `chrome.tabs` and a content script. **No CDP. No `navigator.webdriver`.** There is essentially no automation fingerprint on a read.
 - **Interactions** — `run_js`, `click`, `type`, `scroll` (gesture) — attach `chrome.debugger` (CDP) **only while they run**, then detach. Clicks and typing are trusted (`isTrusted = true`), so JS handlers accept them.
+- **`screenshot`** captures the page as an image and spans both — its default viewport and `scroll` (stitched) modes stay no-CDP; `fullPage` and element capture use CDP.
 
 Prefer reads; escalate to interactions only when you must. On the most aggressively-monitored targets, favor `get_html` + parse over `run_js`.
 

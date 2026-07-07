@@ -2,10 +2,10 @@
 layout: ../../layouts/Docs.astro
 title: Tools
 kicker: reference
-description: The seven browser tools Pluckor exposes — what each does, what it returns, when to reach for it — plus the status and restart management tools.
+description: The eight browser tools Pluckor exposes — what each does, what it returns, when to reach for it — plus the status and restart management tools.
 ---
 
-Pluckor exposes **seven browser tools**. Three are **reads** that run through a content script with no CDP and no automation fingerprint; four are **interactions** that attach `chrome.debugger` only while they run. Two more **management** tools — [`status` and `restart`](#management) — act on the daemon itself so an agent can recover a stuck browser.
+Pluckor exposes **eight browser tools** — **reads** that run through a content script with no CDP and no automation fingerprint, and **interactions** that attach `chrome.debugger` only while they run (`screenshot` spans both, by mode). Two more **management** tools — [`status` and `restart`](#management) — act on the daemon itself so an agent can recover a stuck browser.
 
 | Tool | Kind | Use it to… |
 |---|---|---|
@@ -16,6 +16,7 @@ Pluckor exposes **seven browser tools**. Three are **reads** that run through a 
 | `click` | CDP | Trusted click |
 | `type` | CDP | Trusted text entry |
 | `scroll` | CDP | Scroll for lazy-load / infinite feeds |
+| `screenshot` | read/CDP | See the page as an image — viewport, a long shot, or an element |
 
 ## navigate
 
@@ -91,6 +92,22 @@ scroll { "y": 2000, "mode": "wheel" }
 // → { scrolled, mode }
 ```
 
+## screenshot
+
+Capture the page as an image a vision-capable agent can *see* — returned as an image plus `{ width, height, format, bytes }`.
+
+```jsonc
+screenshot { }                     // visible viewport — no CDP, no fingerprint
+screenshot { "scroll": true }      // full page, scroll-and-stitch — no CDP, loads lazy content
+screenshot { "fullPage": true }    // full page, one CDP shot — exact
+screenshot { "selector": "table" } // one element — CDP clip
+// → image + { width, height, format, bytes }
+```
+
+- **Default (viewport)** and **`scroll: true`** leave **no CDP fingerprint**; `fullPage: true` and `selector` use CDP.
+- **Two ways to a long screenshot:** `scroll` stitches viewport slices — it forces lazy content to load, but repeats any `position: fixed`/sticky header — while `fullPage` renders the whole page in one shot: exact, no duplication, but it can miss lazy content.
+- JPEG and downscaled by default to keep vision-token cost down; pass `format: "png"` or `quality` to override.
+
 ## Management
 
 Two tools act on the **daemon** itself rather than the page, so an agent — or you — can recover a stuck, stale, or outdated browser without restarting your MCP host.
@@ -112,6 +129,6 @@ If a browser tool fails with `NO_BROWSER`, `NOT_CONNECTED`, `CONNECTION_LOST`, o
 
 ## Reads vs. interactions
 
-Reads (`navigate`, `get_html`, `wait_for_selector`) leave **no automation fingerprint** — they use tab and content-script APIs only. The interaction tools (`run_js`, `click`, `type`, and `scroll` in `gesture` mode) attach `chrome.debugger`, which shows Chrome's "started debugging this browser" infobar during the call and is a small detection surface.
+Reads (`navigate`, `get_html`, `wait_for_selector`, and `screenshot`'s viewport and `scroll` modes) leave **no automation fingerprint** — they use tab and content-script APIs only. The interaction tools (`run_js`, `click`, `type`, `scroll` in `gesture` mode, and `screenshot`'s `fullPage`/`selector` modes) attach `chrome.debugger`, which shows Chrome's "started debugging this browser" infobar during the call and is a small detection surface.
 
 **Prefer reads; escalate to interactions only when you must.** See [Cloudflare & stealth](/docs/cloudflare/) for fingerprint discipline.

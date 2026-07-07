@@ -80,13 +80,14 @@ Every tool returns structured JSON straight to the agent — not a screenshot to
 - `get_html` → `{ html, url, truncated }`
 - `run_js` → `{ value }` (must be JSON-serializable)
 - `wait_for_selector` → `{ found, waitedMs }`
+- `screenshot` → an image (plus `{ width, height, format, bytes }`)
 
 The agent reads these values and decides the next step. There's nothing to screen-scrape on your end.
 
 ## Next steps
 
 - **[The skill →](/docs/skill/)** — the patterns that make extraction reliable.
-- **[Tools →](/docs/tools/)** — the full reference for the seven browser tools.
+- **[Tools →](/docs/tools/)** — the full reference for the eight browser tools.
 - **[The plk CLI →](/docs/plk/)** — keep the browser warm and log in once.
 - **[Recovery →](/docs/recovery/)** — when the browser gets stuck, one `restart` brings it back.
 - **[Recipes →](/docs/recipes/)** — real end-to-end extractions.
