@@ -27,6 +27,10 @@ const tools = [
   { name: 'go_forward', desc: 'Navigate forward in history and wait for load. No CDP.', cdp: false },
   { name: 'reload', desc: 'Reload the tab (optional bypassCache) and wait for load. No CDP.', cdp: false },
   { name: 'wait_for_function', desc: 'Poll a JS expression until it is truthy, or time out — for conditions a selector cannot express.', cdp: true },
+  { name: 'get_cookies', desc: 'Read cookies for the page, from the persistent profile. No CDP.', cdp: false },
+  { name: 'set_cookie', desc: 'Set a cookie for the page — persists in the profile. No CDP.', cdp: false },
+  { name: 'get_local_storage', desc: "Read the page's localStorage (a key or all). No CDP.", cdp: false },
+  { name: 'set_local_storage', desc: "Write a localStorage item on the page's origin. No CDP.", cdp: false },
 ];
 
 const walls = [
@@ -162,7 +166,7 @@ const walls = [
     <div class="wrap">
       <div class="sec-head" data-reveal>
         <p class="kicker">the surface</p>
-        <h2 class="h2">Twenty tools. One session.</h2>
+        <h2 class="h2">Twenty-four tools. One session.</h2>
         <p class="lede sec-lede">
           Small, sharp, composable. The golden path is
           <code>navigate → wait_for_selector → get_html / run_js → click / type → re-extract</code>.

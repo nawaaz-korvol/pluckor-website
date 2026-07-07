@@ -2,10 +2,10 @@
 layout: ../../layouts/Docs.astro
 title: Tools
 kicker: reference
-description: The twenty browser tools Pluckor exposes — what each does, what it returns, when to reach for it — plus the status and restart management tools.
+description: The twenty-four browser tools Pluckor exposes — what each does, what it returns, when to reach for it — plus the status and restart management tools.
 ---
 
-Pluckor exposes **twenty browser tools** — **reads** that run through a content script with no CDP and no automation fingerprint, and **interactions** that attach `chrome.debugger` only while they run (`screenshot` and `capture_requests` span both, by mode). Two more **management** tools — [`status` and `restart`](#management) — act on the daemon itself so an agent can recover a stuck browser.
+Pluckor exposes **twenty-four browser tools** — **reads** that run through a content script with no CDP and no automation fingerprint, and **interactions** that attach `chrome.debugger` only while they run (`screenshot` and `capture_requests` span both, by mode). Two more **management** tools — [`status` and `restart`](#management) — act on the daemon itself so an agent can recover a stuck browser.
 
 Every tool also accepts an optional **`timeoutMs`** (milliseconds) to override its default time budget — raise it for a slow page or a long script, or lower it to fail fast.
 
@@ -31,6 +31,10 @@ Every tool also accepts an optional **`timeoutMs`** (milliseconds) to override i
 | `go_forward` | read | Navigate forward in history and wait for load |
 | `reload` | read | Reload the tab (optional `bypassCache`) and wait for load |
 | `wait_for_function` | CDP | Poll a JS expression until it's truthy |
+| `get_cookies` | read | Read cookies for the page |
+| `set_cookie` | read | Set a cookie (persists in the profile) |
+| `get_local_storage` | read | Read the page's localStorage |
+| `set_local_storage` | read | Write a localStorage item |
 
 ## navigate
 
@@ -243,6 +247,24 @@ wait_for_function { "expression": "window.dataReady === true", "timeoutMs": 1000
 // → { satisfied, value, waitedMs }
 ```
 
+## get_cookies / set_cookie
+
+Read or set cookies for the current page (or an explicit `url`) — via the persistent profile, no CDP. Inspect a session or pull an auth cookie.
+
+```jsonc
+get_cookies { "name": "session" }              // → { cookies, count }
+set_cookie { "name": "token", "value": "…" }   // → { set, name }
+```
+
+## get_local_storage / set_local_storage
+
+Read or write the page origin's localStorage — no CDP.
+
+```jsonc
+get_local_storage { }                               // → { items, count }
+set_local_storage { "key": "flag", "value": "1" }   // → { set, key }
+```
+
 ## Management
 
 Two tools act on the **daemon** itself rather than the page, so an agent — or you — can recover a stuck, stale, or outdated browser without restarting your MCP host.
@@ -264,6 +286,6 @@ If a browser tool fails with `NO_BROWSER`, `NOT_CONNECTED`, `CONNECTION_LOST`, o
 
 ## Reads vs. interactions
 
-Reads (`navigate`, `get_html`, `wait_for_selector`, `extract`, `extract_links`, `wait_for_response`, `capture_console`, `select_option`, `go_back`, `go_forward`, `reload`, `capture_requests` metadata, and `screenshot`'s viewport and `scroll` modes) leave **no automation fingerprint** — they use tab and content-script APIs only. The interaction tools (`run_js`, `click`, `type`, `press_key`, `hover`, `wait_for_function`, `scroll` in `gesture` mode, `screenshot`'s `fullPage`/`selector` modes, and `capture_requests`'s body-recording session) attach `chrome.debugger`, which shows Chrome's "started debugging this browser" infobar during the call and is a small detection surface.
+Reads (`navigate`, `get_html`, `wait_for_selector`, `extract`, `extract_links`, `wait_for_response`, `capture_console`, `select_option`, `go_back`, `go_forward`, `reload`, `get_cookies`, `set_cookie`, `get_local_storage`, `set_local_storage`, `capture_requests` metadata, and `screenshot`'s viewport and `scroll` modes) leave **no automation fingerprint** — they use tab and content-script APIs only. The interaction tools (`run_js`, `click`, `type`, `press_key`, `hover`, `wait_for_function`, `scroll` in `gesture` mode, `screenshot`'s `fullPage`/`selector` modes, and `capture_requests`'s body-recording session) attach `chrome.debugger`, which shows Chrome's "started debugging this browser" infobar during the call and is a small detection surface.
 
 **Prefer reads; escalate to interactions only when you must.** See [Cloudflare & stealth](/docs/cloudflare/) for fingerprint discipline.

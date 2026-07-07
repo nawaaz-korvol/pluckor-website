@@ -86,13 +86,14 @@ Every tool returns structured JSON straight to the agent — not a screenshot to
 - `capture_console` → `{ entries, count }`
 - `press_key` → `{ pressed }` · `select_option` → `{ selected, value, label }` · `hover` → `{ hovered }`
 - `go_back`/`go_forward`/`reload` → `{ url, finalUrl, settled, onChallenge }` · `wait_for_function` → `{ satisfied, value, waitedMs }`
+- `get_cookies` → `{ cookies, count }` · `get_local_storage` → `{ items, count }` · `set_cookie`/`set_local_storage` → `{ set, … }`
 
 The agent reads these values and decides the next step. There's nothing to screen-scrape on your end.
 
 ## Next steps
 
 - **[The skill →](/docs/skill/)** — the patterns that make extraction reliable.
-- **[Tools →](/docs/tools/)** — the full reference for the twenty browser tools.
+- **[Tools →](/docs/tools/)** — the full reference for the twenty-four browser tools.
 - **[The plk CLI →](/docs/plk/)** — keep the browser warm and log in once.
 - **[Recovery →](/docs/recovery/)** — when the browser gets stuck, one `restart` brings it back.
 - **[Recipes →](/docs/recipes/)** — real end-to-end extractions.
