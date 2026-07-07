@@ -2,10 +2,10 @@
 layout: ../../layouts/Docs.astro
 title: Tools
 kicker: reference
-description: The eight browser tools Pluckor exposes — what each does, what it returns, when to reach for it — plus the status and restart management tools.
+description: The ten browser tools Pluckor exposes — what each does, what it returns, when to reach for it — plus the status and restart management tools.
 ---
 
-Pluckor exposes **eight browser tools** — **reads** that run through a content script with no CDP and no automation fingerprint, and **interactions** that attach `chrome.debugger` only while they run (`screenshot` spans both, by mode). Two more **management** tools — [`status` and `restart`](#management) — act on the daemon itself so an agent can recover a stuck browser.
+Pluckor exposes **ten browser tools** — **reads** that run through a content script with no CDP and no automation fingerprint, and **interactions** that attach `chrome.debugger` only while they run (`screenshot` spans both, by mode). Two more **management** tools — [`status` and `restart`](#management) — act on the daemon itself so an agent can recover a stuck browser.
 
 | Tool | Kind | Use it to… |
 |---|---|---|
@@ -17,6 +17,8 @@ Pluckor exposes **eight browser tools** — **reads** that run through a content
 | `type` | CDP | Trusted text entry |
 | `scroll` | CDP | Scroll for lazy-load / infinite feeds |
 | `screenshot` | read/CDP | See the page as an image — viewport, a long shot, or an element |
+| `extract` | read | Structured data from a field→selector map (+ `container` for a listing) |
+| `extract_links` | read | Harvest deduped, absolute links for list→detail crawls |
 
 ## navigate
 
@@ -108,6 +110,39 @@ screenshot { "selector": "table" } // one element — CDP clip
 - **Two ways to a long screenshot:** `scroll` stitches viewport slices — it forces lazy content to load, but repeats any `position: fixed`/sticky header — while `fullPage` renders the whole page in one shot: exact, no duplication, but it can miss lazy content.
 - JPEG and downscaled by default to keep vision-token cost down; pass `format: "png"` or `quality` to override.
 
+## extract
+
+Turn the page into structured JSON — declaratively, no code, **no CDP**. Give a `fields` map (name → selector, or `{ selector, attr, html }`); add a `container` to get one record per matching element.
+
+```jsonc
+// one record from the page
+extract {
+  "fields": { "title": "h1", "price": "[itemprop=price]", "img": { "selector": "img", "attr": "src" } }
+}
+// → { record: { title, price, img } }
+
+// a whole listing — one record per card
+extract {
+  "container": ".product-card",
+  "fields": { "name": ".title", "url": { "selector": "a", "attr": "href" } }
+}
+// → { records: [ … ], count }
+```
+
+- A field is a **selector** (its trimmed text) or **`{ selector, attr, html }`**. `href`/`src` attributes come back **absolute**.
+- Prefer `extract` over `run_js` to pull data — it's declarative *and* fingerprint-free.
+
+## extract_links
+
+Harvest links for the **list → detail crawl** — absolute, deduped URLs.
+
+```jsonc
+extract_links { "within": ".results", "pattern": "/products/", "limit": 50 }
+// → { links: ["https://…/products/abc", … ], count }
+```
+
+- `pattern` is a substring the URL must contain, `within` scopes to a container, `selector` defaults to `a[href]`, `limit` caps the count.
+
 ## Management
 
 Two tools act on the **daemon** itself rather than the page, so an agent — or you — can recover a stuck, stale, or outdated browser without restarting your MCP host.
@@ -129,6 +164,6 @@ If a browser tool fails with `NO_BROWSER`, `NOT_CONNECTED`, `CONNECTION_LOST`, o
 
 ## Reads vs. interactions
 
-Reads (`navigate`, `get_html`, `wait_for_selector`, and `screenshot`'s viewport and `scroll` modes) leave **no automation fingerprint** — they use tab and content-script APIs only. The interaction tools (`run_js`, `click`, `type`, `scroll` in `gesture` mode, and `screenshot`'s `fullPage`/`selector` modes) attach `chrome.debugger`, which shows Chrome's "started debugging this browser" infobar during the call and is a small detection surface.
+Reads (`navigate`, `get_html`, `wait_for_selector`, `extract`, `extract_links`, and `screenshot`'s viewport and `scroll` modes) leave **no automation fingerprint** — they use tab and content-script APIs only. The interaction tools (`run_js`, `click`, `type`, `scroll` in `gesture` mode, and `screenshot`'s `fullPage`/`selector` modes) attach `chrome.debugger`, which shows Chrome's "started debugging this browser" infobar during the call and is a small detection surface.
 
 **Prefer reads; escalate to interactions only when you must.** See [Cloudflare & stealth](/docs/cloudflare/) for fingerprint discipline.
