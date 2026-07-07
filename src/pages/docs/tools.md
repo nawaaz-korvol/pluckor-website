@@ -2,10 +2,10 @@
 layout: ../../layouts/Docs.astro
 title: Tools
 kicker: reference
-description: The twenty-four browser tools Pluckor exposes — what each does, what it returns, when to reach for it — plus the status and restart management tools.
+description: The twenty-six browser tools Pluckor exposes — what each does, what it returns, when to reach for it — plus the status and restart management tools.
 ---
 
-Pluckor exposes **twenty-four browser tools** — **reads** that run through a content script with no CDP and no automation fingerprint, and **interactions** that attach `chrome.debugger` only while they run (`screenshot` and `capture_requests` span both, by mode). Two more **management** tools — [`status` and `restart`](#management) — act on the daemon itself so an agent can recover a stuck browser.
+Pluckor exposes **twenty-six browser tools** — **reads** that run through a content script with no CDP and no automation fingerprint, and **interactions** that attach `chrome.debugger` only while they run (`screenshot` and `capture_requests` span both, by mode). Two more **management** tools — [`status` and `restart`](#management) — act on the daemon itself so an agent can recover a stuck browser.
 
 Every tool also accepts an optional **`timeoutMs`** (milliseconds) to override its default time budget — raise it for a slow page or a long script, or lower it to fail fast.
 
@@ -35,6 +35,8 @@ Every tool also accepts an optional **`timeoutMs`** (milliseconds) to override i
 | `set_cookie` | read | Set a cookie (persists in the profile) |
 | `get_local_storage` | read | Read the page's localStorage |
 | `set_local_storage` | read | Write a localStorage item |
+| `download` | read | Download a URL to disk and get the file path |
+| `save_pdf` | CDP | Render the current page to a PDF on disk |
 
 ## navigate
 
@@ -265,6 +267,30 @@ get_local_storage { }                               // → { items, count }
 set_local_storage { "key": "flag", "value": "1" }   // → { set, key }
 ```
 
+## download
+
+Download a URL straight to disk — the "Download CSV/PDF/export" button target, or a media file — and get the file path back. No CDP.
+
+```jsonc
+download { "url": "https://example.com/report.csv", "filename": "reports/q3.csv" }
+// → { path, filename, url, mime, bytes }
+```
+
+- `filename` is a name (or subfolder path) **relative to the download folder** — absolute paths aren't allowed. The returned `path` is the file's actual location.
+- Reach for it when the data you want is behind a download button rather than in the DOM.
+
+## save_pdf
+
+Render the **current page** to a PDF and save it to disk, returning the path (CDP). Navigate first.
+
+```jsonc
+save_pdf { "filename": "invoice.pdf", "landscape": false, "printBackground": true }
+// → { path, filename, bytes }
+```
+
+- `filename` is **relative to the download folder** (no absolute paths); defaults to `page.pdf`.
+- `landscape` and `printBackground` tune the render — turn on `printBackground` to keep background colors and images.
+
 ## Management
 
 Two tools act on the **daemon** itself rather than the page, so an agent — or you — can recover a stuck, stale, or outdated browser without restarting your MCP host.
@@ -286,6 +312,6 @@ If a browser tool fails with `NO_BROWSER`, `NOT_CONNECTED`, `CONNECTION_LOST`, o
 
 ## Reads vs. interactions
 
-Reads (`navigate`, `get_html`, `wait_for_selector`, `extract`, `extract_links`, `wait_for_response`, `capture_console`, `select_option`, `go_back`, `go_forward`, `reload`, `get_cookies`, `set_cookie`, `get_local_storage`, `set_local_storage`, `capture_requests` metadata, and `screenshot`'s viewport and `scroll` modes) leave **no automation fingerprint** — they use tab and content-script APIs only. The interaction tools (`run_js`, `click`, `type`, `press_key`, `hover`, `wait_for_function`, `scroll` in `gesture` mode, `screenshot`'s `fullPage`/`selector` modes, and `capture_requests`'s body-recording session) attach `chrome.debugger`, which shows Chrome's "started debugging this browser" infobar during the call and is a small detection surface.
+Reads (`navigate`, `get_html`, `wait_for_selector`, `extract`, `extract_links`, `wait_for_response`, `capture_console`, `select_option`, `go_back`, `go_forward`, `reload`, `get_cookies`, `set_cookie`, `get_local_storage`, `set_local_storage`, `download`, `capture_requests` metadata, and `screenshot`'s viewport and `scroll` modes) leave **no automation fingerprint** — they use tab and content-script APIs only. The interaction tools (`run_js`, `click`, `type`, `press_key`, `hover`, `wait_for_function`, `save_pdf`, `scroll` in `gesture` mode, `screenshot`'s `fullPage`/`selector` modes, and `capture_requests`'s body-recording session) attach `chrome.debugger`, which shows Chrome's "started debugging this browser" infobar during the call and is a small detection surface.
 
 **Prefer reads; escalate to interactions only when you must.** See [Cloudflare & stealth](/docs/cloudflare/) for fingerprint discipline.

@@ -31,6 +31,8 @@ const tools = [
   { name: 'set_cookie', desc: 'Set a cookie for the page — persists in the profile. No CDP.', cdp: false },
   { name: 'get_local_storage', desc: "Read the page's localStorage (a key or all). No CDP.", cdp: false },
   { name: 'set_local_storage', desc: "Write a localStorage item on the page's origin. No CDP.", cdp: false },
+  { name: 'download', desc: 'Download a URL to disk and get the file path — a "Download CSV/PDF/export" button target or a media file. Filename is relative to the download folder. No CDP.', cdp: false },
+  { name: 'save_pdf', desc: 'Render the current page to a PDF and save it to disk, returning the path. Options: landscape, printBackground, filename.', cdp: true },
 ];
 
 const walls = [
@@ -166,7 +168,7 @@ const walls = [
     <div class="wrap">
       <div class="sec-head" data-reveal>
         <p class="kicker">the surface</p>
-        <h2 class="h2">Twenty-four tools. One session.</h2>
+        <h2 class="h2">Twenty-six tools. One session.</h2>
         <p class="lede sec-lede">
           Small, sharp, composable. The golden path is
           <code>navigate → wait_for_selector → get_html / run_js → click / type → re-extract</code>.
