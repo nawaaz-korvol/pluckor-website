@@ -42,3 +42,7 @@ Headless works technically — but the user agent becomes `HeadlessChrome/…`, 
 ## Everything is local
 
 The daemon runs a single browser on fixed local ports (`:9234`, `:9235`), both bound to `127.0.0.1`. Concurrent agent sessions share the one browser rather than each launching their own. Nothing is reachable from another machine.
+
+## Recovering the daemon
+
+Because the daemon is long-lived and shared, it can outlast an upgrade or wedge. A dropped control socket reconnects on its own; a stale or **outdated** daemon is replaced with a single `restart` — from the [CLI](/docs/plk/#recovering-a-stale-or-outdated-daemon) or the [`restart` tool](/docs/tools/#management). See [Recovering a stuck browser](/docs/recovery/).

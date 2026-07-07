@@ -35,6 +35,7 @@ The skill spells these out in full; the essentials:
 - **Pick robust selectors.** Prefer, in order: `<script type="application/ld+json">`, `[itemprop="…"]` microdata, `data-*` attributes, stable ids — then fall back to classes. Visual class names change.
 - **Wait, don't guess.** A skeleton or `0` results means the content is async-rendered. `wait_for_selector` for the element that signals real content, *then* extract.
 - **Multi-page in one session.** The browser persists across calls, so do list pages and detail pages in the same session.
+- **Recover, don't spin.** If a tool fails with `NO_BROWSER` / `NOT_CONNECTED` / a timeout, the shared daemon may be wedged or outdated — call `restart` once and retry, don't loop. See [Recovery](/docs/recovery/).
 
 See **[Recipes](/docs/recipes/)** for worked examples of each.
 

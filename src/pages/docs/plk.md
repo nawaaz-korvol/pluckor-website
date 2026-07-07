@@ -14,9 +14,10 @@ Under the hood there are two pieces: a **daemon** that owns the browser, and the
 ```bash
 plk start          # launch the browser daemon in the background
 plk start --tail   # …and follow its logs live
-plk status         # is it running? is the control channel up?
+plk status         # running? reachable? which version? browser connected?
 plk logs --tail    # follow the daemon log
 plk stop           # close the browser and stop the daemon
+plk restart        # stop then start — recovers a stale or outdated daemon
 plk mcp            # the MCP server the agent spawns (auto-starts the daemon)
 ```
 
@@ -42,3 +43,16 @@ The cleanest way to extract from sites behind a login:
 ## One browser per machine
 
 The daemon runs a **single** browser on a fixed local port. Concurrent agent sessions share it — they don't each launch their own. Everything binds to `127.0.0.1`; the browser is never exposed off-box. See [How it works](/docs/how-it-works/) for the full topology.
+
+## Recovering a stale or outdated daemon
+
+Because the daemon is long-lived, it can outlast the tools that talk to it — most often after you **upgrade Pluckor**, when a fresh `npx pluckor mcp` finds an older daemon still running. It can also wedge or lose its browser. The tells: `plk status` shows `OUTDATED`, or a `daemon: stopped · control: reachable` line (a stale pid file while a daemon still holds the port), or browser tools fail with `NO_BROWSER` / `NOT_CONNECTED`.
+
+```bash
+plk status    # daemon: running (pid …) · control: reachable · v0.3.0 · browser: connected
+plk restart   # stop the real daemon — even with a stale pid or old version — and start fresh
+```
+
+`plk restart` is a robust `plk stop` followed by a fresh start. Both treat the **control port**, not the pid file, as the source of truth, so they stop the *real* daemon even behind a stale pid (fixed in 0.3.0); what `restart` adds is starting a clean daemon afterward — which is what actually recovers an outdated or wedged one. The same bounce is exposed as the [`restart` MCP tool](/docs/tools/#management), so an agent can recover itself; see [Recovering a stuck browser](/docs/recovery/).
+
+> Because the browser is shared, `restart` bounces it for **every** session on the machine.

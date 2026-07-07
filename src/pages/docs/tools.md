@@ -2,10 +2,10 @@
 layout: ../../layouts/Docs.astro
 title: Tools
 kicker: reference
-description: The seven tools Pluckor exposes — what each does, its parameters, what it returns, and when to reach for it.
+description: The seven browser tools Pluckor exposes — what each does, what it returns, when to reach for it — plus the status and restart management tools.
 ---
 
-Pluckor exposes seven tools. Three are **reads** that run through a content script with no CDP and no automation fingerprint; four are **interactions** that attach `chrome.debugger` only while they run.
+Pluckor exposes **seven browser tools**. Three are **reads** that run through a content script with no CDP and no automation fingerprint; four are **interactions** that attach `chrome.debugger` only while they run. Two more **management** tools — [`status` and `restart`](#management) — act on the daemon itself so an agent can recover a stuck browser.
 
 | Tool | Kind | Use it to… |
 |---|---|---|
@@ -90,6 +90,25 @@ Scroll the page for lazy-loaded content and infinite feeds. `wheel` mode by defa
 scroll { "y": 2000, "mode": "wheel" }
 // → { scrolled, mode }
 ```
+
+## Management
+
+Two tools act on the **daemon** itself rather than the page, so an agent — or you — can recover a stuck, stale, or outdated browser without restarting your MCP host.
+
+| Tool | Use it to… | Returns |
+|---|---|---|
+| `status` | Check daemon health — proxy vs daemon version, whether the daemon is **outdated**, browser connected, control reachable | `{ proxyVersion, controlReachable, daemon, outdated }` |
+| `restart` | Bounce the daemon — stop it (even a stale-pid or outdated one), start a fresh one, and reconnect | `{ restarted, daemon }` |
+
+```jsonc
+status  {}
+// → { proxyVersion, controlReachable, daemon, outdated }
+
+restart {}
+// → { restarted: true, daemon }
+```
+
+If a browser tool fails with `NO_BROWSER`, `NOT_CONNECTED`, `CONNECTION_LOST`, or a timeout, call `restart` and retry once — the error text says so. A dropped connection reconnects on its own; `restart` is for a daemon that's wedged or an **older version** than the one you just installed. See **[Recovering a stuck browser](/docs/recovery/)**.
 
 ## Reads vs. interactions
 

@@ -20,6 +20,7 @@ export const docsNav: DocGroup[] = [
     items: [
       { href: '/docs/tools/', label: 'Tools' },
       { href: '/docs/plk/', label: 'The plk CLI' },
+      { href: '/docs/recovery/', label: 'Recovery' },
       { href: '/docs/configuration/', label: 'Configuration' },
     ],
   },
