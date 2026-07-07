@@ -23,6 +23,10 @@ const tools = [
   { name: 'press_key', desc: 'Press a key with a trusted keyboard event — Enter to submit, Escape, Tab, arrows, or a character.', cdp: true },
   { name: 'select_option', desc: 'Choose an option in a native <select> by value/label/index. Fires change; no CDP.', cdp: false },
   { name: 'hover', desc: 'Move the mouse over an element to reveal menus, tooltips, or hover-lazy content.', cdp: true },
+  { name: 'go_back', desc: 'Navigate back in history and wait for load. No CDP.', cdp: false },
+  { name: 'go_forward', desc: 'Navigate forward in history and wait for load. No CDP.', cdp: false },
+  { name: 'reload', desc: 'Reload the tab (optional bypassCache) and wait for load. No CDP.', cdp: false },
+  { name: 'wait_for_function', desc: 'Poll a JS expression until it is truthy, or time out — for conditions a selector cannot express.', cdp: true },
 ];
 
 const walls = [
@@ -158,7 +162,7 @@ const walls = [
     <div class="wrap">
       <div class="sec-head" data-reveal>
         <p class="kicker">the surface</p>
-        <h2 class="h2">Sixteen tools. One session.</h2>
+        <h2 class="h2">Twenty tools. One session.</h2>
         <p class="lede sec-lede">
           Small, sharp, composable. The golden path is
           <code>navigate → wait_for_selector → get_html / run_js → click / type → re-extract</code>.
