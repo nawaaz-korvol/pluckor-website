@@ -2,10 +2,10 @@
 layout: ../../layouts/Docs.astro
 title: Tools
 kicker: reference
-description: The twenty-six browser tools Pluckor exposes — what each does, what it returns, when to reach for it — plus the status and restart management tools.
+description: The twenty-seven browser tools Pluckor exposes — what each does, what it returns, when to reach for it — plus the status and restart management tools.
 ---
 
-Pluckor exposes **twenty-six browser tools** — **reads** that run through a content script with no CDP and no automation fingerprint, and **interactions** that attach `chrome.debugger` only while they run (`screenshot` and `capture_requests` span both, by mode). Two more **management** tools — [`status` and `restart`](#management) — act on the daemon itself so an agent can recover a stuck browser.
+Pluckor exposes **twenty-seven browser tools** — **reads** that run through a content script with no CDP and no automation fingerprint, and **interactions** that attach `chrome.debugger` only while they run (`screenshot` and `capture_requests` span both, by mode). Two more **management** tools — [`status` and `restart`](#management) — act on the daemon itself so an agent can recover a stuck browser.
 
 Every tool also accepts an optional **`timeoutMs`** (milliseconds) to override its default time budget — raise it for a slow page or a long script, or lower it to fail fast.
 
@@ -14,6 +14,7 @@ Every tool also accepts an optional **`timeoutMs`** (milliseconds) to override i
 | `navigate` | read | Load a page and settle past interstitials |
 | `get_html` | read | Read the rendered DOM, stealthily |
 | `wait_for_selector` | read | Wait out async content |
+| `snapshot` | read | Map the page's actionable elements as refs, to act without guessing selectors |
 | `run_js` | CDP | Extract structured data / read computed state |
 | `click` | CDP | Trusted click |
 | `type` | CDP | Trusted text entry |
@@ -73,6 +74,25 @@ wait_for_selector { "selector": ".product-card", "timeoutMs": 12000, "visible": 
 
 Modern pages render content, ratings, and prices asynchronously *after* load. Wait for a selector that only exists once the real content is there, then extract.
 
+## snapshot
+
+Walk the DOM and return a compact, indented, ref-stamped map of the page's **actionable elements** — links, buttons, inputs, selects — with heading and landmark context. **No CDP, no fingerprint** (a content-script DOM walk). Act by `ref` instead of guessing a CSS selector.
+
+```jsonc
+snapshot { "selector": "form", "maxChars": 8000 }
+// → { tree, count, url, title, truncated }
+//
+//   heading "Sign in"
+//     [e3] textbox "Email"
+//     [e4] textbox "Password"
+//     [e7] button  "Sign in"
+```
+
+- Each actionable element is stamped `data-plk-ref="eN"`; feed that `ref` to `click` / `type` / `hover` / `press_key` / `select_option` in place of a `selector`.
+- **Refs are re-minted on every snapshot.** After a navigation or a re-render an old ref goes stale — a gone ref means the page changed, so `snapshot` again.
+- `selector` scopes the walk to a subtree; `maxChars` caps the returned tree (sets `truncated: true` when it clips).
+- Cheaper and far more reliable than dumping `get_html` and guessing a selector. When you already have a robust selector (an id, `data-*`, microdata), a plain `selector` is still fine and skips the snapshot.
+
 ## run_js
 
 Evaluate a JavaScript expression in the page and get its JSON value back. The convenient structured extractor. Uses CDP (shows the debugger infobar).
@@ -88,7 +108,7 @@ run_js { "expression": "document.title", "awaitPromise": true }
 
 ## click
 
-A trusted click (`isTrusted = true`) at an element's center. For buttons, links, and checkboxes.
+A trusted click (`isTrusted = true`) at an element's center. For buttons, links, and checkboxes. Target by CSS `selector` or a snapshot `ref`.
 
 ```jsonc
 click { "selector": "button[type=submit]" }
@@ -97,7 +117,7 @@ click { "selector": "button[type=submit]" }
 
 ## type
 
-Trusted text entry that fires real input events — React and Vue see it. Replaces the field's contents unless `clear: false`.
+Trusted text entry that fires real input events — React and Vue see it. Replaces the field's contents unless `clear: false`. Target by CSS `selector` or a snapshot `ref`.
 
 ```jsonc
 type { "selector": "input[name=q]", "text": "mortgage crm", "clear": true }
@@ -204,7 +224,7 @@ capture_console { "level": "error" } // just errors + uncaught exceptions
 
 ## press_key
 
-Press a key with a trusted keyboard event (CDP) — Enter to submit a search, Escape, Tab, arrows, or a single character.
+Press a key with a trusted keyboard event (CDP) — Enter to submit a search, Escape, Tab, arrows, or a single character. An optional CSS `selector` or snapshot `ref` focuses the target first.
 
 ```jsonc
 press_key { "key": "Enter", "selector": "input[name=q]" }  // focus + submit
@@ -214,7 +234,7 @@ press_key { "key": "Escape" }                              // dismiss a modal
 
 ## select_option
 
-Choose an option in a native `<select>` dropdown by value, label, or index — firing `input`/`change` so React and Vue register it. No CDP (`type` can't drive a native select).
+Choose an option in a native `<select>` dropdown by value, label, or index — firing `input`/`change` so React and Vue register it. No CDP (`type` can't drive a native select). Target by CSS `selector` or a snapshot `ref`.
 
 ```jsonc
 select_option { "selector": "#country", "label": "Germany" }
@@ -223,7 +243,7 @@ select_option { "selector": "#country", "label": "Germany" }
 
 ## hover
 
-Move the mouse over an element (CDP) to reveal dropdown menus, tooltips, or hover-lazy content.
+Move the mouse over an element (CDP) to reveal dropdown menus, tooltips, or hover-lazy content. Target by CSS `selector` or a snapshot `ref`.
 
 ```jsonc
 hover { "selector": ".menu-trigger" }
@@ -312,6 +332,6 @@ If a browser tool fails with `NO_BROWSER`, `NOT_CONNECTED`, `CONNECTION_LOST`, o
 
 ## Reads vs. interactions
 
-Reads (`navigate`, `get_html`, `wait_for_selector`, `extract`, `extract_links`, `wait_for_response`, `capture_console`, `select_option`, `go_back`, `go_forward`, `reload`, `get_cookies`, `set_cookie`, `get_local_storage`, `set_local_storage`, `download`, `capture_requests` metadata, and `screenshot`'s viewport and `scroll` modes) leave **no automation fingerprint** — they use tab and content-script APIs only. The interaction tools (`run_js`, `click`, `type`, `press_key`, `hover`, `wait_for_function`, `save_pdf`, `scroll` in `gesture` mode, `screenshot`'s `fullPage`/`selector` modes, and `capture_requests`'s body-recording session) attach `chrome.debugger`, which shows Chrome's "started debugging this browser" infobar during the call and is a small detection surface.
+Reads (`navigate`, `get_html`, `wait_for_selector`, `snapshot`, `extract`, `extract_links`, `wait_for_response`, `capture_console`, `select_option`, `go_back`, `go_forward`, `reload`, `get_cookies`, `set_cookie`, `get_local_storage`, `set_local_storage`, `download`, `capture_requests` metadata, and `screenshot`'s viewport and `scroll` modes) leave **no automation fingerprint** — they use tab and content-script APIs only. The interaction tools (`run_js`, `click`, `type`, `press_key`, `hover`, `wait_for_function`, `save_pdf`, `scroll` in `gesture` mode, `screenshot`'s `fullPage`/`selector` modes, and `capture_requests`'s body-recording session) attach `chrome.debugger`, which shows Chrome's "started debugging this browser" infobar during the call and is a small detection surface.
 
 **Prefer reads; escalate to interactions only when you must.** See [Cloudflare & stealth](/docs/cloudflare/) for fingerprint discipline.

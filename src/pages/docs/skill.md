@@ -33,6 +33,7 @@ The skill spells these out in full; the essentials:
 
 - **Read with `get_html`, compute with `run_js`.** `get_html` is the stealthy reader (no CDP). `run_js` is the convenient structured extractor — but it returns values *by value*, so they must be JSON-serializable.
 - **Pick robust selectors.** Prefer, in order: `<script type="application/ld+json">`, `[itemprop="…"]` microdata, `data-*` attributes, stable ids — then fall back to classes. Visual class names change.
+- **Act by ref, not guesswork.** When you're driving a page and don't already know solid selectors, `snapshot` first — it returns a ref-stamped map of the actionable elements (no CDP). Then `click` / `type` / `hover` / `press_key` / `select_option` by `ref` instead of a CSS selector. Refs refresh on every snapshot, so a stale ref means the page changed — snapshot again.
 - **Wait, don't guess.** A skeleton or `0` results means the content is async-rendered. `wait_for_selector` for the element that signals real content, *then* extract.
 - **Multi-page in one session.** The browser persists across calls, so do list pages and detail pages in the same session.
 - **Recover, don't spin.** If a tool fails with `NO_BROWSER` / `NOT_CONNECTED` / a timeout, the shared daemon may be wedged or outdated — call `restart` once and retry, don't loop. See [Recovery](/docs/recovery/).

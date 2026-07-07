@@ -10,6 +10,7 @@ const tools = [
   { name: 'navigate', desc: 'Load a URL. Waits for load and settles past Cloudflare-style interstitials.', cdp: false },
   { name: 'get_html', desc: 'Rendered HTML of the page or a selector — content script, no CDP, no fingerprint.', cdp: false },
   { name: 'wait_for_selector', desc: 'Wait until a selector appears (optionally visible), or time out.', cdp: false },
+  { name: 'snapshot', desc: 'A ref-stamped map of the page’s actionable elements — so the agent acts by ref instead of guessing selectors. Content-script DOM walk, no CDP.', cdp: false },
   { name: 'run_js', desc: 'Evaluate JS in the page and get its JSON value back. The structured extractor.', cdp: true },
   { name: 'click', desc: 'Trusted click at an element’s center — isTrusted = true.', cdp: true },
   { name: 'type', desc: 'Trusted text entry that fires real input events. React and Vue see it.', cdp: true },
@@ -168,7 +169,7 @@ const walls = [
     <div class="wrap">
       <div class="sec-head" data-reveal>
         <p class="kicker">the surface</p>
-        <h2 class="h2">Twenty-six tools. One session.</h2>
+        <h2 class="h2">Twenty-seven tools. One session.</h2>
         <p class="lede sec-lede">
           Small, sharp, composable. The golden path is
           <code>navigate → wait_for_selector → get_html / run_js → click / type → re-extract</code>.
