@@ -2,10 +2,10 @@
 layout: ../../layouts/Docs.astro
 title: Tools
 kicker: reference
-description: The thirteen browser tools Pluckor exposes — what each does, what it returns, when to reach for it — plus the status and restart management tools.
+description: The sixteen browser tools Pluckor exposes — what each does, what it returns, when to reach for it — plus the status and restart management tools.
 ---
 
-Pluckor exposes **thirteen browser tools** — **reads** that run through a content script with no CDP and no automation fingerprint, and **interactions** that attach `chrome.debugger` only while they run (`screenshot` and `capture_requests` span both, by mode). Two more **management** tools — [`status` and `restart`](#management) — act on the daemon itself so an agent can recover a stuck browser.
+Pluckor exposes **sixteen browser tools** — **reads** that run through a content script with no CDP and no automation fingerprint, and **interactions** that attach `chrome.debugger` only while they run (`screenshot` and `capture_requests` span both, by mode). Two more **management** tools — [`status` and `restart`](#management) — act on the daemon itself so an agent can recover a stuck browser.
 
 Every tool also accepts an optional **`timeoutMs`** (milliseconds) to override its default time budget — raise it for a slow page or a long script, or lower it to fail fast.
 
@@ -24,6 +24,9 @@ Every tool also accepts an optional **`timeoutMs`** (milliseconds) to override i
 | `capture_requests` | read/CDP | Inspect network traffic (no CDP) or record response bodies (CDP) |
 | `wait_for_response` | read | Wait until a matching request completes |
 | `capture_console` | read | Read the page's console output + uncaught errors |
+| `press_key` | CDP | Press a key — Enter to submit, Escape, Tab, arrows, or a char |
+| `select_option` | read | Choose an option in a native `<select>` |
+| `hover` | CDP | Reveal menus / tooltips by hovering |
 
 ## navigate
 
@@ -189,6 +192,34 @@ capture_console { "level": "error" } // just errors + uncaught exceptions
 - Buffered by a content-script hook installed at page load — no CDP, no fingerprint (the page can see the hook).
 - For a *specific script's* output, use `run_js` with `captureConsole: true` instead — it returns `{ value, logs, error }`.
 
+## press_key
+
+Press a key with a trusted keyboard event (CDP) — Enter to submit a search, Escape, Tab, arrows, or a single character.
+
+```jsonc
+press_key { "key": "Enter", "selector": "input[name=q]" }  // focus + submit
+press_key { "key": "Escape" }                              // dismiss a modal
+// → { pressed }
+```
+
+## select_option
+
+Choose an option in a native `<select>` dropdown by value, label, or index — firing `input`/`change` so React and Vue register it. No CDP (`type` can't drive a native select).
+
+```jsonc
+select_option { "selector": "#country", "label": "Germany" }
+// → { selected, value, label }
+```
+
+## hover
+
+Move the mouse over an element (CDP) to reveal dropdown menus, tooltips, or hover-lazy content.
+
+```jsonc
+hover { "selector": ".menu-trigger" }
+// → { hovered }
+```
+
 ## Management
 
 Two tools act on the **daemon** itself rather than the page, so an agent — or you — can recover a stuck, stale, or outdated browser without restarting your MCP host.
@@ -210,6 +241,6 @@ If a browser tool fails with `NO_BROWSER`, `NOT_CONNECTED`, `CONNECTION_LOST`, o
 
 ## Reads vs. interactions
 
-Reads (`navigate`, `get_html`, `wait_for_selector`, `extract`, `extract_links`, `wait_for_response`, `capture_console`, `capture_requests` metadata, and `screenshot`'s viewport and `scroll` modes) leave **no automation fingerprint** — they use tab and content-script APIs only. The interaction tools (`run_js`, `click`, `type`, `scroll` in `gesture` mode, `screenshot`'s `fullPage`/`selector` modes, and `capture_requests`'s body-recording session) attach `chrome.debugger`, which shows Chrome's "started debugging this browser" infobar during the call and is a small detection surface.
+Reads (`navigate`, `get_html`, `wait_for_selector`, `extract`, `extract_links`, `wait_for_response`, `capture_console`, `select_option`, `capture_requests` metadata, and `screenshot`'s viewport and `scroll` modes) leave **no automation fingerprint** — they use tab and content-script APIs only. The interaction tools (`run_js`, `click`, `type`, `press_key`, `hover`, `scroll` in `gesture` mode, `screenshot`'s `fullPage`/`selector` modes, and `capture_requests`'s body-recording session) attach `chrome.debugger`, which shows Chrome's "started debugging this browser" infobar during the call and is a small detection surface.
 
 **Prefer reads; escalate to interactions only when you must.** See [Cloudflare & stealth](/docs/cloudflare/) for fingerprint discipline.

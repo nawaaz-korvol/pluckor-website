@@ -84,13 +84,14 @@ Every tool returns structured JSON straight to the agent — not a screenshot to
 - `extract` → `{ record }` or `{ records, count }` · `extract_links` → `{ links, count }`
 - `capture_requests` → `{ requests, count }` · `wait_for_response` → `{ matched, url, status, waitedMs }`
 - `capture_console` → `{ entries, count }`
+- `press_key` → `{ pressed }` · `select_option` → `{ selected, value, label }` · `hover` → `{ hovered }`
 
 The agent reads these values and decides the next step. There's nothing to screen-scrape on your end.
 
 ## Next steps
 
 - **[The skill →](/docs/skill/)** — the patterns that make extraction reliable.
-- **[Tools →](/docs/tools/)** — the full reference for the thirteen browser tools.
+- **[Tools →](/docs/tools/)** — the full reference for the sixteen browser tools.
 - **[The plk CLI →](/docs/plk/)** — keep the browser warm and log in once.
 - **[Recovery →](/docs/recovery/)** — when the browser gets stuck, one `restart` brings it back.
 - **[Recipes →](/docs/recipes/)** — real end-to-end extractions.
