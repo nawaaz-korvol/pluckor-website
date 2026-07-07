@@ -37,6 +37,9 @@ const tools = [
   { name: 'set_local_storage', desc: "Write a localStorage item on the page's origin. No CDP.", cdp: false },
   { name: 'download', desc: 'Download a URL to disk and get the file path — a "Download CSV/PDF/export" button target or a media file. Filename is relative to the download folder. No CDP.', cdp: false },
   { name: 'save_pdf', desc: 'Render the current page to a PDF and save it to disk, returning the path. Options: landscape, printBackground, filename.', cdp: true },
+  { name: 'open_tab', desc: 'Open a new tab and get a handle to drive it — so one agent can work several tabs at once. No CDP.', cdp: false },
+  { name: 'list_tabs', desc: 'List your open tabs (handle, url, title, which is default). Lane-scoped — you only see your own. No CDP.', cdp: false },
+  { name: 'close_tab', desc: 'Close one of your tabs by its handle. No CDP.', cdp: false },
 ];
 
 const walls = [
@@ -172,7 +175,7 @@ const walls = [
     <div class="wrap">
       <div class="sec-head" data-reveal>
         <p class="kicker">the surface</p>
-        <h2 class="h2">Thirty tools. One session.</h2>
+        <h2 class="h2">Thirty-three tools. One session.</h2>
         <p class="lede sec-lede">
           Small, sharp, composable. The golden path is
           <code>navigate → wait_for_selector → get_html / run_js → click / type → re-extract</code>.

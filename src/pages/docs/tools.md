@@ -2,12 +2,12 @@
 layout: ../../layouts/Docs.astro
 title: Tools
 kicker: reference
-description: The thirty browser tools Pluckor exposes — what each does, what it returns, when to reach for it — plus the status and restart management tools.
+description: The thirty-three browser tools Pluckor exposes — what each does, what it returns, when to reach for it — plus the status and restart management tools.
 ---
 
-Pluckor exposes **thirty browser tools** — **reads** that run through a content script with no CDP and no automation fingerprint, and **interactions** that attach `chrome.debugger` only while they run (`screenshot` and `capture_requests` span both, by mode). Two more **management** tools — [`status` and `restart`](#management) — act on the daemon itself so an agent can recover a stuck browser.
+Pluckor exposes **thirty-three browser tools** — **reads** that run through a content script with no CDP and no automation fingerprint, and **interactions** that attach `chrome.debugger` only while they run (`screenshot` and `capture_requests` span both, by mode). Two more **management** tools — [`status` and `restart`](#management) — act on the daemon itself so an agent can recover a stuck browser.
 
-Every tool also accepts an optional **`timeoutMs`** (milliseconds) to override its default time budget — raise it for a slow page or a long script, or lower it to fail fast.
+Every tool also accepts an optional **`timeoutMs`** (milliseconds) to override its default time budget — raise it for a slow page or a long script, or lower it to fail fast. Every tool also takes an optional **`tab`** handle to target one of your open tabs (omit it for your default tab) — see [Multiple tabs](#multiple-tabs).
 
 | Tool | Kind | Use it to… |
 |---|---|---|
@@ -41,6 +41,9 @@ Every tool also accepts an optional **`timeoutMs`** (milliseconds) to override i
 | `set_local_storage` | read | Write a localStorage item |
 | `download` | read | Download a URL to disk and get the file path |
 | `save_pdf` | CDP | Render the current page to a PDF on disk |
+| `open_tab` | read | Open a new tab and get a handle to drive it |
+| `list_tabs` | read | List your open tabs (handle, url, title, which is default) |
+| `close_tab` | read | Close one of your tabs by its handle |
 
 ## navigate
 
@@ -378,8 +381,30 @@ restart {}
 
 If a browser tool fails with `NO_BROWSER`, `NOT_CONNECTED`, `CONNECTION_LOST`, or a timeout, call `restart` and retry once — the error text says so. A dropped connection reconnects on its own; `restart` is for a daemon that's wedged or an **older version** than the one you just installed. See **[Recovering a stuck browser](/docs/recovery/)**.
 
+## Multiple tabs
+
+The daemon owns **one shared browser**, but tabs are **isolated per connection**. Each `plk mcp` process is a **lane** with its own default tab — so **multiple agents** (or an orchestrator's subagents) share the one warm, logged-in browser without colliding. No setup; existing single-tab code just works, targeting your default tab.
+
+A **single agent** can also drive several tabs at once: [`open_tab`](#open_tab--list_tabs--close_tab) returns a `tab` handle, and every tool accepts an optional **`tab`** to target that tab (omit it for your default). Handles and default tabs are **lane-scoped** — a connection only ever sees and drives its own tabs.
+
+```jsonc
+open_tab { "url": "https://example.com/list" }   // → { tab: "t2", url, finalUrl, settled, onChallenge, isLaneDefault }
+extract  { "container": ".row", "fields": { … }, "tab": "t2" }
+navigate { "url": "https://example.com/item/1", "tab": "t3" }
+list_tabs {}                                      // → { tabs, count } — your tabs only
+close_tab { "tab": "t2" }                          // → { closed, tab }
+```
+
+It's all **No CDP** — new tabs and the tab index are managed through `chrome.tabs`, no `chrome.debugger`. For fully separate *browsers* (different profiles/logins), run separate daemons; not needed for the shared-browser cases above.
+
+### open_tab / list_tabs / close_tab
+
+- **`open_tab { url? }`** — open a new tab (optionally loading `url`) and get a handle to drive it. → `{ tab, url, finalUrl, settled, onChallenge, isLaneDefault }`. No CDP.
+- **`list_tabs`** — list your open tabs (handle, url, title, active, which is the lane default). → `{ tabs, count }`. Lane-scoped — you only see your own. No CDP.
+- **`close_tab { tab }`** — close one of your tabs by its handle. → `{ closed, tab }`. No CDP.
+
 ## Reads vs. interactions
 
-Reads (`navigate`, `get_html`, `get_markdown`, `wait_for_selector`, `snapshot`, `extract`, `extract_links`, `wait_for_response`, `wait_for_network_idle`, `wait_for_human`, `capture_console`, `select_option`, `go_back`, `go_forward`, `reload`, `get_cookies`, `set_cookie`, `get_local_storage`, `set_local_storage`, `download`, `capture_requests` metadata, and `screenshot`'s viewport and `scroll` modes) leave **no automation fingerprint** — they use tab and content-script APIs only. The interaction tools (`run_js`, `click`, `type`, `press_key`, `hover`, `wait_for_function`, `save_pdf`, `scroll` in `gesture` mode, `screenshot`'s `fullPage`/`selector` modes, and `capture_requests`'s body-recording session) attach `chrome.debugger`, which shows Chrome's "started debugging this browser" infobar during the call and is a small detection surface.
+Reads (`navigate`, `get_html`, `get_markdown`, `wait_for_selector`, `snapshot`, `extract`, `extract_links`, `wait_for_response`, `wait_for_network_idle`, `wait_for_human`, `capture_console`, `select_option`, `go_back`, `go_forward`, `reload`, `get_cookies`, `set_cookie`, `get_local_storage`, `set_local_storage`, `download`, `open_tab`, `list_tabs`, `close_tab`, `capture_requests` metadata, and `screenshot`'s viewport and `scroll` modes) leave **no automation fingerprint** — they use tab and content-script APIs only. The interaction tools (`run_js`, `click`, `type`, `press_key`, `hover`, `wait_for_function`, `save_pdf`, `scroll` in `gesture` mode, `screenshot`'s `fullPage`/`selector` modes, and `capture_requests`'s body-recording session) attach `chrome.debugger`, which shows Chrome's "started debugging this browser" infobar during the call and is a small detection surface.
 
 **Prefer reads; escalate to interactions only when you must.** See [Cloudflare & stealth](/docs/cloudflare/) for fingerprint discipline.

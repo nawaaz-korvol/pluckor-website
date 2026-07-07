@@ -25,7 +25,7 @@ The agent calls a tool → the proxy forwards it to the daemon → the daemon dr
 
 This split is the heart of Pluckor's stealth:
 
-- **Reads** — `navigate`, `get_html`, `get_markdown`, `wait_for_selector`, `snapshot`, `extract`, `extract_links`, `wait_for_response`, `wait_for_network_idle`, `wait_for_human`, `capture_console`, `select_option`, `go_back`, `go_forward`, `reload`, `get_cookies`, `set_cookie`, `get_local_storage`, `set_local_storage`, `capture_requests` (metadata) — run through `chrome.tabs`, `chrome.webRequest`, and a content script. **No CDP. No `navigator.webdriver`.** There is essentially no automation fingerprint on a read.
+- **Reads** — `navigate`, `get_html`, `get_markdown`, `wait_for_selector`, `snapshot`, `extract`, `extract_links`, `wait_for_response`, `wait_for_network_idle`, `wait_for_human`, `capture_console`, `select_option`, `go_back`, `go_forward`, `reload`, `get_cookies`, `set_cookie`, `get_local_storage`, `set_local_storage`, `open_tab`, `list_tabs`, `close_tab`, `capture_requests` (metadata) — run through `chrome.tabs`, `chrome.webRequest`, and a content script. **No CDP. No `navigator.webdriver`.** There is essentially no automation fingerprint on a read.
 - **Interactions** — `run_js`, `click`, `type`, `press_key`, `hover`, `wait_for_function`, `scroll` (gesture) — attach `chrome.debugger` (CDP) **only while they run**, then detach. Clicks and typing are trusted (`isTrusted = true`), so JS handlers accept them.
 - **`screenshot`** captures the page as an image and spans both — its default viewport and `scroll` (stitched) modes stay no-CDP; `fullPage` and element capture use CDP.
 
@@ -42,7 +42,7 @@ Headless works technically — but the user agent becomes `HeadlessChrome/…`, 
 
 ## Everything is local
 
-The daemon runs a single browser on fixed local ports (`:9234`, `:9235`), both bound to `127.0.0.1`. Concurrent agent sessions share the one browser rather than each launching their own. Nothing is reachable from another machine.
+The daemon runs a single browser on fixed local ports (`:9234`, `:9235`), both bound to `127.0.0.1`. Concurrent agent sessions share the one browser rather than each launching their own. Tabs are **isolated per connection** — each proxy (each `plk mcp` lane) gets its own default tab, so multiple agents share the one warm browser without colliding, and `open_tab` lets a single agent drive several tabs at once. See [Multiple tabs](/docs/tools/#multiple-tabs). Nothing is reachable from another machine.
 
 ## Recovering the daemon
 
