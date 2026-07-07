@@ -7,6 +7,8 @@ description: The twelve browser tools Pluckor exposes — what each does, what i
 
 Pluckor exposes **twelve browser tools** — **reads** that run through a content script with no CDP and no automation fingerprint, and **interactions** that attach `chrome.debugger` only while they run (`screenshot` and `capture_requests` span both, by mode). Two more **management** tools — [`status` and `restart`](#management) — act on the daemon itself so an agent can recover a stuck browser.
 
+Every tool also accepts an optional **`timeoutMs`** (milliseconds) to override its default time budget — raise it for a slow page or a long script, or lower it to fail fast.
+
 | Tool | Kind | Use it to… |
 |---|---|---|
 | `navigate` | read | Load a page and settle past interstitials |
