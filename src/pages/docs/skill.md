@@ -32,6 +32,7 @@ navigate → wait_for_selector → get_html / run_js → (click / type) → re-e
 The skill spells these out in full; the essentials:
 
 - **Read with `get_html`, compute with `run_js`.** `get_html` is the stealthy reader (no CDP). `run_js` is the convenient structured extractor — but it returns values *by value*, so they must be JSON-serializable.
+- **Reach for `get_markdown` to read prose.** For an article, post, or doc, `get_markdown` returns clean, token-efficient Markdown of the main content (no CDP) — typically ~10× smaller than the HTML. Use `get_html` / `extract` when you need specific fields, `get_markdown` when you need to *read* the page.
 - **Pick robust selectors.** Prefer, in order: `<script type="application/ld+json">`, `[itemprop="…"]` microdata, `data-*` attributes, stable ids — then fall back to classes. Visual class names change.
 - **Act by ref, not guesswork.** When you're driving a page and don't already know solid selectors, `snapshot` first — it returns a ref-stamped map of the actionable elements (no CDP). Then `click` / `type` / `hover` / `press_key` / `select_option` by `ref` instead of a CSS selector. Refs refresh on every snapshot, so a stale ref means the page changed — snapshot again.
 - **Wait, don't guess.** A skeleton or `0` results means the content is async-rendered. `wait_for_selector` for the element that signals real content, *then* extract.
