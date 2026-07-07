@@ -395,13 +395,35 @@ list_tabs {}                                      // → { tabs, count } — you
 close_tab { "tab": "t2" }                          // → { closed, tab }
 ```
 
-It's all **No CDP** — new tabs and the tab index are managed through `chrome.tabs`, no `chrome.debugger`. For fully separate *browsers* (different profiles/logins), run separate daemons; not needed for the shared-browser cases above.
+It's all **No CDP** — new tabs and the tab index are managed through `chrome.tabs`, no `chrome.debugger`. For fully separate *browsers* (different profiles/logins), run [separate instances](#separate-browsers); not needed for the shared-browser cases above.
 
 ### open_tab / list_tabs / close_tab
 
 - **`open_tab { url? }`** — open a new tab (optionally loading `url`) and get a handle to drive it. → `{ tab, url, finalUrl, settled, onChallenge, isLaneDefault }`. No CDP.
 - **`list_tabs`** — list your open tabs (handle, url, title, active, which is the lane default). → `{ tabs, count }`. Lane-scoped — you only see your own. No CDP.
 - **`close_tab { tab }`** — close one of your tabs by its handle. → `{ closed, tab }`. No CDP.
+
+### Separate browsers
+
+Lanes and tabs (above) all share **one browser** — one profile, one set of logins. When agents are doing *completely unrelated* work that shouldn't share a session at all, run **separate instances** instead: set **`PLUCKOR_INSTANCE`** (a name or a number) and that daemon gets its own browser, Chrome profile, logins, ports, and auth token.
+
+```jsonc
+// two MCP servers → two independent browsers
+{
+  "mcpServers": {
+    "pluckor":      { "command": "pluckor", "args": ["mcp"] },
+    "pluckor-work": { "command": "pluckor", "args": ["mcp"],
+                      "env": { "PLUCKOR_INSTANCE": "work" } }
+  }
+}
+```
+
+- **Own home & profile.** `PLUCKOR_INSTANCE=work` puts everything under `~/.pluckor-bridge-work` — a separate Chrome profile, so its logins never mix with the default instance's. Unset = the default instance, unchanged.
+- **Deterministic ports.** Default `9234`/`9235`; an integer instance `N` → `+2N`; a name → a stable hash. So `plk` and `plk mcp` agree with no discovery. Override with `PLUCKOR_WS_PORT` / `PLUCKOR_CONTROL_PORT`.
+- **Isolated by token.** Each non-default instance gets its **own auth token**, so one instance's browser can't connect to another's daemon. The Chrome-for-Testing download cache stays **shared** — no re-download per instance.
+- **CLI follows the env.** `plk status` / `plk stop` / `plk restart` target the instance named in `PLUCKOR_INSTANCE`.
+
+**Rule of thumb:** one browser, many lanes/tabs for related work that can share logins; **separate instances** for unrelated work that shouldn't.
 
 ## Reads vs. interactions
 

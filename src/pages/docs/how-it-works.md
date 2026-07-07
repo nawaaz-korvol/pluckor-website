@@ -42,7 +42,7 @@ Headless works technically — but the user agent becomes `HeadlessChrome/…`, 
 
 ## Everything is local
 
-The daemon runs a single browser on fixed local ports (`:9234`, `:9235`), both bound to `127.0.0.1`. Concurrent agent sessions share the one browser rather than each launching their own. Tabs are **isolated per connection** — each proxy (each `plk mcp` lane) gets its own default tab, so multiple agents share the one warm browser without colliding, and `open_tab` lets a single agent drive several tabs at once. See [Multiple tabs](/docs/tools/#multiple-tabs). Nothing is reachable from another machine.
+The daemon runs a single browser on fixed local ports (`:9234`, `:9235`), both bound to `127.0.0.1`. Concurrent agent sessions share the one browser rather than each launching their own. Tabs are **isolated per connection** — each proxy (each `plk mcp` lane) gets its own default tab, so multiple agents share the one warm browser without colliding, and `open_tab` lets a single agent drive several tabs at once. See [Multiple tabs](/docs/tools/#multiple-tabs). For agents doing *unrelated* work that shouldn't share logins at all, set [`PLUCKOR_INSTANCE`](/docs/tools/#separate-browsers) to run a fully **separate** browser — its own profile, logins, and ports. Nothing is reachable from another machine.
 
 ## Recovering the daemon
 
