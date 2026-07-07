@@ -25,7 +25,7 @@ The agent calls a tool → the proxy forwards it to the daemon → the daemon dr
 
 This split is the heart of Pluckor's stealth:
 
-- **Reads** — `navigate`, `get_html`, `wait_for_selector`, `extract`, `extract_links` — run through `chrome.tabs` and a content script. **No CDP. No `navigator.webdriver`.** There is essentially no automation fingerprint on a read.
+- **Reads** — `navigate`, `get_html`, `wait_for_selector`, `extract`, `extract_links`, `wait_for_response`, `capture_requests` (metadata) — run through `chrome.tabs`, `chrome.webRequest`, and a content script. **No CDP. No `navigator.webdriver`.** There is essentially no automation fingerprint on a read.
 - **Interactions** — `run_js`, `click`, `type`, `scroll` (gesture) — attach `chrome.debugger` (CDP) **only while they run**, then detach. Clicks and typing are trusted (`isTrusted = true`), so JS handlers accept them.
 - **`screenshot`** captures the page as an image and spans both — its default viewport and `scroll` (stitched) modes stay no-CDP; `fullPage` and element capture use CDP.
 

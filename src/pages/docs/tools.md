@@ -2,10 +2,10 @@
 layout: ../../layouts/Docs.astro
 title: Tools
 kicker: reference
-description: The ten browser tools Pluckor exposes — what each does, what it returns, when to reach for it — plus the status and restart management tools.
+description: The twelve browser tools Pluckor exposes — what each does, what it returns, when to reach for it — plus the status and restart management tools.
 ---
 
-Pluckor exposes **ten browser tools** — **reads** that run through a content script with no CDP and no automation fingerprint, and **interactions** that attach `chrome.debugger` only while they run (`screenshot` spans both, by mode). Two more **management** tools — [`status` and `restart`](#management) — act on the daemon itself so an agent can recover a stuck browser.
+Pluckor exposes **twelve browser tools** — **reads** that run through a content script with no CDP and no automation fingerprint, and **interactions** that attach `chrome.debugger` only while they run (`screenshot` and `capture_requests` span both, by mode). Two more **management** tools — [`status` and `restart`](#management) — act on the daemon itself so an agent can recover a stuck browser.
 
 | Tool | Kind | Use it to… |
 |---|---|---|
@@ -19,6 +19,8 @@ Pluckor exposes **ten browser tools** — **reads** that run through a content s
 | `screenshot` | read/CDP | See the page as an image — viewport, a long shot, or an element |
 | `extract` | read | Structured data from a field→selector map (+ `container` for a listing) |
 | `extract_links` | read | Harvest deduped, absolute links for list→detail crawls |
+| `capture_requests` | read/CDP | Inspect network traffic (no CDP) or record response bodies (CDP) |
+| `wait_for_response` | read | Wait until a matching request completes |
 
 ## navigate
 
@@ -143,6 +145,33 @@ extract_links { "within": ".results", "pattern": "/products/", "limit": 50 }
 
 - `pattern` is a substring the URL must contain, `within` scopes to a container, `selector` defaults to `a[href]`, `limit` caps the count.
 
+## capture_requests
+
+The data you want is often in the **JSON the page already fetched** (past Cloudflare) — grab it instead of scraping the DOM.
+
+```jsonc
+// recent request metadata — no CDP (URLs, status, headers, timing, errors)
+capture_requests { "status": ">=400" }    // what failed
+capture_requests { "pattern": "/api/" }   // what it fetched
+
+// grab a response BODY — a short CDP recording:
+capture_requests { "record": true, "pattern": "/api/" }   // start
+//   …navigate / click the thing that fires the request…
+capture_requests { "stop": true }          // → { requests: [ { url, status, body, … } ] }
+```
+
+- **Metadata is no-CDP** (a rolling `webRequest` buffer); **bodies need the CDP recording window** (`record` → act → `stop`).
+- Filter by `pattern`, `status` (`"failed"` / `200` / `">=400"`), `resourceTypes` (default xhr/fetch — a status query widens to all), `methods`, `limit`, `maxBodyBytes`.
+
+## wait_for_response
+
+Block until a request whose URL contains `pattern` completes — a smarter "is the data here yet?" than `wait_for_selector` for API-driven pages. No CDP.
+
+```jsonc
+wait_for_response { "pattern": "/api/results", "timeoutMs": 15000 }
+// → { matched, url, status, method, waitedMs }
+```
+
 ## Management
 
 Two tools act on the **daemon** itself rather than the page, so an agent — or you — can recover a stuck, stale, or outdated browser without restarting your MCP host.
@@ -164,6 +193,6 @@ If a browser tool fails with `NO_BROWSER`, `NOT_CONNECTED`, `CONNECTION_LOST`, o
 
 ## Reads vs. interactions
 
-Reads (`navigate`, `get_html`, `wait_for_selector`, `extract`, `extract_links`, and `screenshot`'s viewport and `scroll` modes) leave **no automation fingerprint** — they use tab and content-script APIs only. The interaction tools (`run_js`, `click`, `type`, `scroll` in `gesture` mode, and `screenshot`'s `fullPage`/`selector` modes) attach `chrome.debugger`, which shows Chrome's "started debugging this browser" infobar during the call and is a small detection surface.
+Reads (`navigate`, `get_html`, `wait_for_selector`, `extract`, `extract_links`, `wait_for_response`, `capture_requests` metadata, and `screenshot`'s viewport and `scroll` modes) leave **no automation fingerprint** — they use tab and content-script APIs only. The interaction tools (`run_js`, `click`, `type`, `scroll` in `gesture` mode, `screenshot`'s `fullPage`/`selector` modes, and `capture_requests`'s body-recording session) attach `chrome.debugger`, which shows Chrome's "started debugging this browser" infobar during the call and is a small detection surface.
 
 **Prefer reads; escalate to interactions only when you must.** See [Cloudflare & stealth](/docs/cloudflare/) for fingerprint discipline.
