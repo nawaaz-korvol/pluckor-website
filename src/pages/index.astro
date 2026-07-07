@@ -21,6 +21,7 @@ const tools = [
   { name: 'extract_links', desc: 'Harvest deduped, absolute links (filter by pattern) for list→detail crawling. No CDP.', cdp: false },
   { name: 'capture_requests', desc: 'Inspect the page’s network — request metadata (no CDP), or record response bodies like the JSON an API returned past Cloudflare (CDP).', cdp: false },
   { name: 'wait_for_response', desc: 'Block until a request matching a URL pattern completes — a smarter wait for API-driven pages. No CDP.', cdp: false },
+  { name: 'wait_for_network_idle', desc: 'Block until the page’s network goes quiet — the “data loaded” wait when no single request or selector fits. No CDP.', cdp: false },
   { name: 'capture_console', desc: "Read the page's own console output and uncaught errors, buffered since load. No CDP.", cdp: false },
   { name: 'press_key', desc: 'Press a key with a trusted keyboard event — Enter to submit, Escape, Tab, arrows, or a character.', cdp: true },
   { name: 'select_option', desc: 'Choose an option in a native <select> by value/label/index. Fires change; no CDP.', cdp: false },
@@ -170,7 +171,7 @@ const walls = [
     <div class="wrap">
       <div class="sec-head" data-reveal>
         <p class="kicker">the surface</p>
-        <h2 class="h2">Twenty-eight tools. One session.</h2>
+        <h2 class="h2">Twenty-nine tools. One session.</h2>
         <p class="lede sec-lede">
           Small, sharp, composable. The golden path is
           <code>navigate → wait_for_selector → get_html / run_js → click / type → re-extract</code>.
