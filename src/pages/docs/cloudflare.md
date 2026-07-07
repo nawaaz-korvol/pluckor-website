@@ -29,7 +29,9 @@ wait_for_selector { "selector": ".product-card", "timeoutMs": 12000 }
 
 ## The hard boundary: interactive Turnstile
 
-The **interactive Turnstile** — the checkbox you physically click — is a hard boundary. A CDP-dispatched click can be detected, so don't try to bot through it. Surface it as needing a human: with the [plk daemon](/docs/plk/) running, a person can click it once in the live window, and the session continues.
+The **interactive Turnstile** — the checkbox you physically click — is a hard boundary. A CDP-dispatched click can be detected, so don't try to bot through it — hand it to a human with [`wait_for_human`](/docs/tools/#wait_for_human). It focuses the window, fires a system notification, and shows an on-page banner with your `reason`, then **blocks until the challenge clears** (auto-detected) — a person clicks it once in the live window and the agent continues. No CDP.
+
+The same tool clears a **login or 2FA** wall: pass `until` with a selector that only appears once the human is through (e.g. `wait_for_human { reason: "log in", until: "#dashboard" }`).
 
 ## Fingerprint discipline
 

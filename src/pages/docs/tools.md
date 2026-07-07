@@ -2,10 +2,10 @@
 layout: ../../layouts/Docs.astro
 title: Tools
 kicker: reference
-description: The twenty-nine browser tools Pluckor exposes — what each does, what it returns, when to reach for it — plus the status and restart management tools.
+description: The thirty browser tools Pluckor exposes — what each does, what it returns, when to reach for it — plus the status and restart management tools.
 ---
 
-Pluckor exposes **twenty-nine browser tools** — **reads** that run through a content script with no CDP and no automation fingerprint, and **interactions** that attach `chrome.debugger` only while they run (`screenshot` and `capture_requests` span both, by mode). Two more **management** tools — [`status` and `restart`](#management) — act on the daemon itself so an agent can recover a stuck browser.
+Pluckor exposes **thirty browser tools** — **reads** that run through a content script with no CDP and no automation fingerprint, and **interactions** that attach `chrome.debugger` only while they run (`screenshot` and `capture_requests` span both, by mode). Two more **management** tools — [`status` and `restart`](#management) — act on the daemon itself so an agent can recover a stuck browser.
 
 Every tool also accepts an optional **`timeoutMs`** (milliseconds) to override its default time budget — raise it for a slow page or a long script, or lower it to fail fast.
 
@@ -26,6 +26,7 @@ Every tool also accepts an optional **`timeoutMs`** (milliseconds) to override i
 | `capture_requests` | read/CDP | Inspect network traffic (no CDP) or record response bodies (CDP) |
 | `wait_for_response` | read | Wait until a matching request completes |
 | `wait_for_network_idle` | read | Block until the page's network goes quiet |
+| `wait_for_human` | read | Hand off to a human for an interactive Turnstile, login, or 2FA (No CDP) |
 | `capture_console` | read | Read the page's console output + uncaught errors |
 | `press_key` | CDP | Press a key — Enter to submit, Escape, Tab, arrows, or a char |
 | `select_option` | read | Choose an option in a native `<select>` |
@@ -241,6 +242,21 @@ wait_for_network_idle { "idleMs": 1000, "threshold": 2, "timeoutMs": 20000 }
 - Long-poll, SSE, and socket requests older than 30s are ignored, so a persistent stream can't hold the page "busy" forever.
 - Returns `{ idle, inFlight, waitedMs }` — `idle` is `false` when it timed out with requests still pending.
 
+## wait_for_human
+
+Hand the wheel to a person in the visible browser window for a wall the agent can't clear — an **interactive Cloudflare Turnstile** (the checkbox you physically click), a **login**, or a **2FA** step. Blocks until it resolves — a Cloudflare challenge clears (auto-detected) or an optional `until` CSS selector appears — or times out (default 3 min). **No CDP.**
+
+```jsonc
+wait_for_human { }                                             // interactive Turnstile — resolves when the challenge clears
+wait_for_human { "reason": "log in to your account", "until": "#dashboard" }  // login / 2FA — resolves when the element appears
+// → { resolved, reason, waitedMs, onChallenge }
+```
+
+- **Resolves on** either signal: a Cloudflare challenge clearing (auto-detected, the same probe `navigate` uses) **or** the `until` selector appearing. Pass `until` for a login / 2FA — a selector that only exists once the human is through (e.g. the dashboard element).
+- **Alerts the human three ways** the moment it's called — it focuses and flashes the window, fires a system notification, and shows an on-page banner with your `reason`. All three clear on return.
+- **No CDP.** Detection is a content-script poll (`chrome.scripting`); the alerts use `chrome.windows` and `chrome.notifications` — no `chrome.debugger`, no automation fingerprint.
+- Returns `{ resolved, reason, waitedMs, onChallenge }` — `resolved` is `false` when it timed out before the human got through.
+
 ## capture_console
 
 Read the page's own console output and uncaught errors — no CDP.
@@ -364,6 +380,6 @@ If a browser tool fails with `NO_BROWSER`, `NOT_CONNECTED`, `CONNECTION_LOST`, o
 
 ## Reads vs. interactions
 
-Reads (`navigate`, `get_html`, `get_markdown`, `wait_for_selector`, `snapshot`, `extract`, `extract_links`, `wait_for_response`, `wait_for_network_idle`, `capture_console`, `select_option`, `go_back`, `go_forward`, `reload`, `get_cookies`, `set_cookie`, `get_local_storage`, `set_local_storage`, `download`, `capture_requests` metadata, and `screenshot`'s viewport and `scroll` modes) leave **no automation fingerprint** — they use tab and content-script APIs only. The interaction tools (`run_js`, `click`, `type`, `press_key`, `hover`, `wait_for_function`, `save_pdf`, `scroll` in `gesture` mode, `screenshot`'s `fullPage`/`selector` modes, and `capture_requests`'s body-recording session) attach `chrome.debugger`, which shows Chrome's "started debugging this browser" infobar during the call and is a small detection surface.
+Reads (`navigate`, `get_html`, `get_markdown`, `wait_for_selector`, `snapshot`, `extract`, `extract_links`, `wait_for_response`, `wait_for_network_idle`, `wait_for_human`, `capture_console`, `select_option`, `go_back`, `go_forward`, `reload`, `get_cookies`, `set_cookie`, `get_local_storage`, `set_local_storage`, `download`, `capture_requests` metadata, and `screenshot`'s viewport and `scroll` modes) leave **no automation fingerprint** — they use tab and content-script APIs only. The interaction tools (`run_js`, `click`, `type`, `press_key`, `hover`, `wait_for_function`, `save_pdf`, `scroll` in `gesture` mode, `screenshot`'s `fullPage`/`selector` modes, and `capture_requests`'s body-recording session) attach `chrome.debugger`, which shows Chrome's "started debugging this browser" infobar during the call and is a small detection surface.
 
 **Prefer reads; escalate to interactions only when you must.** See [Cloudflare & stealth](/docs/cloudflare/) for fingerprint discipline.
