@@ -97,3 +97,4 @@ The agent reads these values and decides the next step. There's nothing to scree
 - **[The plk CLI →](/docs/plk/)** — keep the browser warm and log in once.
 - **[Recovery →](/docs/recovery/)** — when the browser gets stuck, one `restart` brings it back.
 - **[Recipes →](/docs/recipes/)** — real end-to-end extractions.
+- **[Deployment →](/docs/deployment/)** — deploying to a server or container, and driving it remotely.

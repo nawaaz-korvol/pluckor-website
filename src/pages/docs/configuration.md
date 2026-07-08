@@ -18,6 +18,11 @@ Pluckor works with zero configuration. Environment variables let you relocate it
 | `PLUCKOR_TOKEN` | *(auto)* | Override the localhost auth token. Non-default instances get their own random token so they can't cross-connect. |
 | `PLUCKOR_CACHE_DIR` | `~/.pluckor-bridge/cache` | Chrome for Testing download cache — **shared** across instances, so a second instance doesn't re-download Chrome. |
 | `PLUCKOR_EXTENSION_DIST` | *(bundled)* | Override the extension directory. Advanced — the extension ships inside the package. |
+| `PLUCKOR_CHROME_FLAGS` | *(none)* | Extra Chrome flags appended at launch, e.g. `--no-sandbox --disable-dev-shm-usage` in a container. See [Deployment](/docs/deployment/). |
+| `PLUCKOR_CONTROL_BIND` | `127.0.0.1` | Bind address of the daemon's control server; `0.0.0.0` to expose it (with a token). See [Deployment](/docs/deployment/). |
+| `PLUCKOR_CONTROL_HOST` | `127.0.0.1` | Address the client/proxy dials to reach the daemon (a published port, or a remote host). |
+| `PLUCKOR_CONTROL_TOKEN` | *(none)* | Auth token for the control channel; **required** when bound off-loopback. |
+| `PLUCKOR_ATTACH` | *(off)* | Client attaches to an already-running daemon instead of spawning a local one. |
 
 Set them in your MCP host config's `env` block, or export them before `plk start`:
 
@@ -49,3 +54,5 @@ The daemon and MCP proxy communicate over WebSockets bound to `127.0.0.1` only:
 - **9235** — the control channel the MCP proxy connects to.
 
 These are the **default instance's** ports. A named or numbered `PLUCKOR_INSTANCE` derives its own pair (an integer `N` → `+2N`; a name → a stable hash), or set `PLUCKOR_WS_PORT` / `PLUCKOR_CONTROL_PORT` explicitly. Nothing binds to a public interface — the browser is never reachable off-box. See [How it works](/docs/how-it-works/) for the full picture.
+
+The control port can be deliberately exposed off-loopback with `PLUCKOR_CONTROL_BIND` plus a `PLUCKOR_CONTROL_TOKEN` to drive a containerized or remote browser — see [Deployment](/docs/deployment/).

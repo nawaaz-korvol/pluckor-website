@@ -17,7 +17,7 @@ Short version: **Claude for Chrome puts Claude inside _your_ browser. Pluckor ha
 | **Primary job** | General browsing & task assistance on the sites you're using | Data extraction / automation — especially getting _through_ anti-bot |
 | **Anti-bot posture** | Operates your real session; not built to evade site defenses | The whole moat: reads run via content-script/tab APIs with **no CDP, no automation fingerprint** — engineered to get past Cloudflare and headless/Playwright blockers |
 | **Isolation & scale** | Your one browser | Separate profiles, isolated tabs/lanes, and fully separate _instances_ (`PLUCKOR_INSTANCE`) — fleets of agents, no collisions |
-| **Where it runs / who owns it** | Anthropic-hosted product, in your daily browser | Self-hosted, `127.0.0.1`-only — you own the browser and the data |
+| **Where it runs / who owns it** | Anthropic-hosted product, in your daily browser | [Self-hosted](/docs/deployment/), `127.0.0.1`-only — you own the browser and the data |
 
 ## When to reach for which
 
