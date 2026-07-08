@@ -29,6 +29,7 @@ export const docsNav: DocGroup[] = [
     items: [
       { href: '/docs/how-it-works/', label: 'How it works' },
       { href: '/docs/cloudflare/', label: 'Cloudflare & stealth' },
+      { href: '/docs/vs-claude-for-chrome/', label: 'vs. Claude for Chrome' },
     ],
   },
   {
