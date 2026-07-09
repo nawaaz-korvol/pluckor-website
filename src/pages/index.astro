@@ -16,7 +16,7 @@ const tools = [
   { name: 'click', desc: 'Trusted click at an element’s center — isTrusted = true.', cdp: true },
   { name: 'type', desc: 'Trusted text entry that fires real input events. React and Vue see it.', cdp: true },
   { name: 'scroll', desc: 'Scroll for lazy-load and infinite feeds. Wheel by default, gesture on demand.', cdp: true },
-  { name: 'screenshot', desc: 'Capture the page as an image a vision agent can see — viewport (no CDP), scroll/fullPage for a long shot, or an element.', cdp: false },
+  { name: 'screenshot', desc: 'Capture the page as an image a vision agent can see — viewport (no CDP), scroll/fullPage for a long shot, or an element. Pass filename or save:true to save it to disk instead of returning it inline.', cdp: false },
   { name: 'extract', desc: 'Structured data from a field→selector map — no code, no CDP. Add a container for a whole listing of records.', cdp: false },
   { name: 'extract_links', desc: 'Harvest deduped, absolute links (filter by pattern) for list→detail crawling. No CDP.', cdp: false },
   { name: 'capture_requests', desc: 'Inspect the page’s network — request metadata (no CDP), or record response bodies like the JSON an API returned past Cloudflare (CDP).', cdp: false },

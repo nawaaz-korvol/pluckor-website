@@ -164,11 +164,13 @@ screenshot { }                     // visible viewport — no CDP, no fingerprin
 screenshot { "scroll": true }      // full page, scroll-and-stitch — no CDP, loads lazy content
 screenshot { "fullPage": true }    // full page, one CDP shot — exact
 screenshot { "selector": "table" } // one element — CDP clip
+screenshot { "fullPage": true, "filename": "report.png" } // saved to the download folder
 // → image + { width, height, format, bytes }
 ```
 
 - **Default (viewport)** and **`scroll: true`** leave **no CDP fingerprint**; `fullPage: true` and `selector` use CDP.
 - **Two ways to a long screenshot:** `scroll` stitches viewport slices — it forces lazy content to load, but repeats any `position: fixed`/sticky header — while `fullPage` renders the whole page in one shot: exact, no duplication, but it can miss lazy content.
+- **Save it to disk instead of inline.** Pass **`filename`** (a relative name; the extension is appended if missing) or **`save: true`** (defaults to `screenshot-<timestamp>.<ext>`) to write the capture to the download folder and get back `{ path, filename, width, height, bytes }` instead of the inline image — for archiving shots or avoiding the vision-token cost. All four modes (viewport, `scroll`, `fullPage`, `selector`) support it.
 - JPEG and downscaled by default to keep vision-token cost down; pass `format: "png"` or `quality` to override.
 
 ## extract
