@@ -23,6 +23,7 @@ Pluckor works with zero configuration. Environment variables let you relocate it
 | `PLUCKOR_CONTROL_HOST` | `127.0.0.1` | Address the client/proxy dials to reach the daemon (a published port, or a remote host). |
 | `PLUCKOR_CONTROL_TOKEN` | *(none)* | Auth token for the control channel; **required** when bound off-loopback. |
 | `PLUCKOR_ATTACH` | *(off)* | Client attaches to an already-running daemon instead of spawning a local one. |
+| `PLUCKOR_NO_FEEDBACK` | *(unset)* | Set to `1` to remove the optional [agent-feedback request](#agent-feedback). |
 
 Set them in your MCP host config's `env` block, or export them before `plk start`:
 
@@ -56,3 +57,23 @@ The daemon and MCP proxy communicate over WebSockets bound to `127.0.0.1` only:
 These are the **default instance's** ports. A named or numbered `PLUCKOR_INSTANCE` derives its own pair (an integer `N` → `+2N`; a name → a stable hash), or set `PLUCKOR_WS_PORT` / `PLUCKOR_CONTROL_PORT` explicitly. Nothing binds to a public interface — the browser is never reachable off-box. See [How it works](/docs/how-it-works/) for the full picture.
 
 The control port can be deliberately exposed off-loopback with `PLUCKOR_CONTROL_BIND` plus a `PLUCKOR_CONTROL_TOKEN` to drive a containerized or remote browser — see [Deployment](/docs/deployment/).
+
+## Agent feedback
+
+Pluckor is driven by agents, so the ones best placed to notice that a tool is
+buggy, confusingly named, or missing something are the agents using it — and they
+have no way to tell us. At startup the MCP server therefore *invites* the agent to
+open an issue at [pluckor-feedbacks](https://github.com/pluckor/pluckor-feedbacks)
+when it hits a bug, an awkward edge, a docs gap, or wishes a capability existed.
+
+It's a request, never a requirement. The wording explicitly ranks it below the
+user's actual task, and tells the agent not to put credentials, personal data, or
+scraped page content into an issue.
+
+```bash
+PLUCKOR_NO_FEEDBACK=1     # omit the request entirely
+```
+
+The request is sent as MCP server `instructions`, not baked into the skill — only
+the server can read the environment, so the opt-out is real rather than advisory.
+With the flag set, nothing about feedback reaches the agent at all.
