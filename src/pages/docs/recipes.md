@@ -91,11 +91,40 @@ And if you build a `run_js` expression by stringifying a **compiled** function (
 (() => { const __name = (f) => f; return (/* your compiled fn */)(); })()
 ```
 
+## Replay it as a script
+
+Once a flow like the one above is settled, stop re-deriving it. Record it by doing it, curate the draft, and replay it in one call:
+
+```text
+record_start  →  do the workflow live  →  record_stop   // → a draft script + candidate assertions
+```
+
+Then curate — trim the exploratory reads, add explicit `wait_for_*` steps (replay has no thinking pauses), swap any snapshot `ref` for a durable selector — and run it:
+
+```jsonc
+run_script {
+  "script": { "version": 1, "steps": [
+    { "tool": "navigate", "params": { "url": "https://example.com/login" } },
+    { "tool": "type",  "params": { "selector": "input[name=user]", "text": "${SECRET:user}" } },
+    { "tool": "type",  "params": { "selector": "input[name=pass]", "text": "${SECRET:pass}" } },
+    { "tool": "click", "params": { "selector": "button[type=submit]" },
+      "expect": [ { "assert": "network", "method": "POST", "url": "**/login", "status": 302 } ] },
+    { "tool": "extract", "params": { "container": ".product-card", "fields": { "name": ".title" } },
+      "expect": [ { "assert": "count", "selector": ".product-card", "min": 1 } ] }
+  ] },
+  "secrets": { "user": "…", "pass": "…" }
+}
+```
+
+If a contract fails, the run halts and hands back the failing contract plus a page snapshot — patch the step and `run_script { from: haltedAt }` to resume from the fault. Full detail in **[Scripting](/docs/scripting/)**.
+
 ## Gotchas checklist
 
 - **Navigate first**, or you get `NO_TAB`.
+- **`open_tab` first if any other agent might be using the browser**, and drive only that handle — a collision on a shared default tab returns someone else's page **silently**.
 - **Wait for async content** before extracting — skeletons are the usual failure.
 - **`run_js` returns JSON only** — no DOM nodes.
 - **Large pages truncate** at ~32 MB (`get_html` sets `truncated: true`).
 - **A visible Chrome window opens** — that's expected, not a bug.
 - **Interactive Turnstile needs a human** — see [Cloudflare & stealth](/docs/cloudflare/#the-hard-boundary-interactive-turnstile).
+- **Scripts don't branch** — a decision is where the script hands back to the agent. See [Scripting](/docs/scripting/#deliberately-linear).

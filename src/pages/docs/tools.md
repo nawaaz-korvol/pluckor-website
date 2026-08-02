@@ -2,10 +2,10 @@
 layout: ../../layouts/Docs.astro
 title: Tools
 kicker: reference
-description: The thirty-three browser tools Pluckor exposes — what each does, what it returns, when to reach for it — plus the status and restart management tools.
+description: The thirty-three browser tools Pluckor exposes — what each does, what it returns, when to reach for it — plus the management and scripting tools.
 ---
 
-Pluckor exposes **thirty-three browser tools** — **reads** that run through a content script with no CDP and no automation fingerprint, and **interactions** that attach `chrome.debugger` only while they run (`screenshot` and `capture_requests` span both, by mode). Two more **management** tools — [`status` and `restart`](#management) — act on the daemon itself so an agent can recover a stuck browser.
+Pluckor exposes **thirty-three browser tools** — **reads** that run through a content script with no CDP and no automation fingerprint, and **interactions** that attach `chrome.debugger` only while they run (`screenshot` and `capture_requests` span both, by mode). Two more **management** tools — [`status` and `restart`](#management) — act on the daemon itself so an agent can recover a stuck browser, and three **scripting** tools — [`run_script`, `record_start`, `record_stop`](#scripting) — replay a whole workflow of the tools below in one call.
 
 Every tool also accepts an optional **`timeoutMs`** (milliseconds) to override its default time budget — raise it for a slow page or a long script, or lower it to fail fast. Every tool also takes an optional **`tab`** handle to target one of your open tabs (omit it for your default tab) — see [Multiple tabs](#multiple-tabs).
 
@@ -383,9 +383,46 @@ restart {}
 
 If a browser tool fails with `NO_BROWSER`, `NOT_CONNECTED`, `CONNECTION_LOST`, or a timeout, call `restart` and retry once — the error text says so. A dropped connection reconnects on its own; `restart` is for a daemon that's wedged or an **older version** than the one you just installed. See **[Recovering a stuck browser](/docs/recovery/)**.
 
+## Scripting
+
+Three tools replay a *known* workflow instead of re-deriving it. They orchestrate the browser tools above — a script step is an ordinary tool call — so nothing new happens to the page.
+
+| Tool | Use it to… | Returns |
+|---|---|---|
+| `run_script` | Replay an ordered list of tool-call steps in **one call**, each optionally guarded by `pre` and verified by an `expect` effect contract | `{ outcome, data, assertions, steps }` (+ `failure` on a halt) |
+| `record_start` | Start capturing your live tool calls into a draft script | `{ recording: true }` |
+| `record_stop` | Stop and return the draft — your steps plus **candidate assertions** inferred from what actually changed | `{ script }` |
+
+```jsonc
+run_script {
+  "script": { "version": 1, "steps": [
+    { "tool": "navigate", "params": { "url": "https://example.com/login" } },
+    { "tool": "type",  "params": { "selector": "#user", "text": "${SECRET:user}" } },
+    { "tool": "click", "params": { "selector": "button[type=submit]" },
+      "expect": [ { "assert": "network", "method": "POST", "url": "**/login", "status": 302 } ] }
+  ] },
+  "secrets": { "user": "…" }
+}
+// → { outcome, data, assertions, steps }   — or, on a halt: { outcome: "halted", haltedAt, failure }
+```
+
+- Assertions work at five layers — `network`, `url`, `selector`, `text`, `count` — each with `onFail`: `halt` (default), `warn`, or `retry`. They're **CDP-free** (`chrome.scripting` + the passive network buffer), so guarding a script adds **no automation fingerprint**.
+- A halted run returns a `failure` payload (the failing contract + a page snapshot at the point of divergence); fix the step and call `run_script { from: haltedAt }` to **resume from the fault**. A mutating step at the resume boundary is never silently re-fired.
+- Credentials go in `secrets` at call time as `${SECRET:name}` — never stored in the script.
+
+Full detail: **[Scripting](/docs/scripting/)**.
+
 ## Multiple tabs
 
-The daemon owns **one shared browser**, but tabs are **isolated per connection**. Each `plk mcp` process is a **lane** with its own default tab — so **multiple agents** (or an orchestrator's subagents) share the one warm, logged-in browser without colliding. No setup; existing single-tab code just works, targeting your default tab.
+The daemon owns **one shared browser**, but tabs are **isolated per connection**. Each `plk mcp` **process** is a **lane** with its own default tab — so separate agents that each run their own `plk mcp` share the one warm, logged-in browser without colliding. No setup; existing single-tab code just works, targeting your default tab.
+
+> **Agents: work only in tabs you opened.** An orchestrator's **subagents typically inherit the parent session's MCP connection** — so they share a lane *and its default tab*, and will navigate it out from under each other. The collision is **silent**: you get the other agent's page back under your own request, with no error. Pluckor can't detect it — one connection carries no per-caller identity — so the discipline *is* the control:
+>
+> 1. **`open_tab` before your first navigation**, and pass that handle on every call.
+> 2. **Keep using it** — one tab for the session, not a fresh one per step.
+> 3. **Never drive a tab you didn't open** — not another agent's, and not one the *human* has open. `list_tabs` showing a tab is not permission to use it.
+> 4. **Open as many as you need — and `close_tab` every one you opened.**
+> 5. **On any `NO_TAB` your handle is dead** — `tab t2 was closed — open_tab or navigate again` if someone closed it, `unknown tab handle: t2` if you already closed it. Open a new tab; never fall back to whatever tab happens to exist.
 
 A **single agent** can also drive several tabs at once: [`open_tab`](#open_tab--list_tabs--close_tab) returns a `tab` handle, and every tool accepts an optional **`tab`** to target that tab (omit it for your default). Handles and default tabs are **lane-scoped** — a connection only ever sees and drives its own tabs.
 
