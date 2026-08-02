@@ -94,6 +94,7 @@ The agent reads these values and decides the next step. There's nothing to scree
 
 - **[The skill →](/docs/skill/)** — the patterns that make extraction reliable.
 - **[Tools →](/docs/tools/)** — the full reference for the thirty-three browser tools.
+- **[Scripting →](/docs/scripting/)** — replay a known workflow in one call, and know when it breaks.
 - **[The plk CLI →](/docs/plk/)** — keep the browser warm and log in once.
 - **[Recovery →](/docs/recovery/)** — when the browser gets stuck, one `restart` brings it back.
 - **[Recipes →](/docs/recipes/)** — real end-to-end extractions.

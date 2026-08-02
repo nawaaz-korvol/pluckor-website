@@ -37,6 +37,8 @@ The skill spells these out in full; the essentials:
 - **Act by ref, not guesswork.** When you're driving a page and don't already know solid selectors, `snapshot` first — it returns a ref-stamped map of the actionable elements (no CDP). Then `click` / `type` / `hover` / `press_key` / `select_option` by `ref` instead of a CSS selector. Refs refresh on every snapshot, so a stale ref means the page changed — snapshot again.
 - **Wait, don't guess.** A skeleton or `0` results means the content is async-rendered. `wait_for_selector` for the element that signals real content, *then* extract.
 - **Multi-page in one session.** The browser persists across calls, so do list pages and detail pages in the same session.
+- **Open your own tab if anyone else might be using the browser.** `open_tab` first, then pass that handle on every call — a collision on a shared default tab hands you someone else's page **silently**. See [Multiple tabs](/docs/tools/#multiple-tabs).
+- **Replay what you already know.** Once a workflow is settled, capture it as a [script](/docs/scripting/) — `run_script` replays it in one call with assertions guarding each step, and hands control back with a snapshot when reality diverges. The skill ships a full authoring & recovery guide (`docs/scripting-agent-guide.md`) alongside it.
 - **Recover, don't spin.** If a tool fails with `NO_BROWSER` / `NOT_CONNECTED` / a timeout, the shared daemon may be wedged or outdated — call `restart` once and retry, don't loop. See [Recovery](/docs/recovery/).
 
 See **[Recipes](/docs/recipes/)** for worked examples of each.
