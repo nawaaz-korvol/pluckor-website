@@ -9,7 +9,7 @@ Pluckor exposes **thirty-three browser tools** — **reads** that run through a 
 
 Every tool also accepts an optional **`timeoutMs`** (milliseconds) to override its default time budget — raise it for a slow page or a long script, or lower it to fail fast. Every tool also takes an optional **`tab`** handle to target one of your open tabs (omit it for your default tab) — see [Multiple tabs](#multiple-tabs).
 
-Every browser tool below is also callable **without MCP**, with the same schema and the same `timeoutMs` / `tab` params: `plk call <tool> '<json>'` for one shot, or `plk pipe` for a persistent NDJSON session — see [Driving it from code](/docs/cli-api/). (The management and scripting tools are not: they belong to the MCP proxy, and the CLI has `plk status` / `plk restart` of its own.)
+Every browser tool below is also callable **without MCP**, with the same schema and the same `timeoutMs` / `tab` params: `plk call <tool> '<json>'` for one shot, or `plk pipe` for a persistent NDJSON session — see [Driving it from code](/docs/cli-api/). The [scripting tools](#scripting) come too, so a program can replay a script and resume it with `{from: haltedAt}` after a halt (`record_start`/`record_stop` need `plk pipe`, since a draft spans requests). Only the [management tools](#management) are absent — from a shell you already have `plk status` and `plk restart`.
 
 | Tool | Kind | Use it to… |
 |---|---|---|

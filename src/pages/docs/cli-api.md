@@ -130,7 +130,32 @@ Two things to know before you fan out:
 - **Don't run two CDP tools on the *same* tab at once.** `run_js`, `click`, `type`, `press_key`, `hover`, `save_pdf`, and `fullPage`/element `screenshot` attach `chrome.debugger` for the duration of the call; two of them overlapping on one tab can have the first one's detach land while the second is still running. Across *different* tabs there is no interaction. Sequence CDP calls per tab; fan out across tabs.
 - **The default viewport `screenshot` activates its tab** (it captures the visible tab), so parallel screenshots across tabs compete for window focus and effectively serialize. Everything else — including all the no-CDP reads — is genuinely parallel.
 
+## Replaying a script, and resuming a halted one
+
+The [scripting](/docs/scripting/) tools are callable here too — for most orchestrators `run_script` *is* the reason to open a session. Rather than reimplementing a workflow as your own step loop, replay a curated script and let its assertion contracts tell you when the page changed underneath you.
+
+```jsonc
+// stdin — replay, with credentials supplied at call time
+{"id":1,"tool":"run_script","args":{"script":{"version":1,"steps":["…"]},"secrets":{"password":"…"}}}
+
+// stdout — it halted at step 2, with the failing contract and a page snapshot
+{"id":1,"ok":true,"result":{"outcome":"halted","haltedAt":2,"failure":{"…":"…"}}}
+```
+
+Patch the step the `failure` payload blames, then resume from exactly there — the **halt → patch → resume** loop:
+
+```jsonc
+{"id":2,"tool":"run_script","args":{"script":{"version":1,"steps":["…patched…"]},"from":2}}
+{"id":2,"ok":true,"result":{"outcome":"completed","startedAt":2,"data":["…"]}}
+```
+
+- **Safe resume.** A mutating step (`click`, `type`, …) at the `from` boundary is **not** re-fired; its state contracts are re-checked instead. Resuming can't double-submit an order or a payment.
+- **`secrets` fills `${SECRET:name}`** in step params, so credentials never live in the stored script. The values reach the page and nothing else — they appear in no result, no stdout line, and no stderr line, so a whole response is safe to log.
+- **No overall time budget.** A script is many calls, so the per-call `timeoutMs + 15_000` rule doesn't apply to it: each *step* carries its own, exactly as under MCP. A long replay is never cut short by the front end.
+- **`record_start` / `record_stop` need `pipe`, not `call`.** A draft accumulates across requests, so one-shot mode could only discard it, and returns a typed error saying so. Recording also assumes *sequential* requests — don't fan out while one is open.
+
+The usual division of labour: an agent records and curates the script once, over MCP, where it can see the page; your program replays it forever. See [Scripting](/docs/scripting/) for how to author one — especially how to write contracts that fail *usefully*, which is what decides whether your orchestrator recovers unattended or has to wake someone.
+
 ## What isn't here
 
-- **Scripting is MCP-only.** `run_script`, `record_start`, and `record_stop` live in the `plk mcp` proxy, which is what lets them orchestrate ordinary tool calls without the daemon or extension knowing scripting exists. A CLI orchestrator writes its own step loop — but the [Scripting](/docs/scripting/) design, especially its assertion layers, is still the right way to think about making a workflow trustworthy.
-- **Daemon management stays on the CLI it already had** — [`plk status`, `plk restart`, `plk logs`](/docs/plk/) — rather than being tools you call. If a run starts failing with `NOT_CONNECTED` or `NO_BROWSER`, shell out to `plk restart` and reconnect; see [Recovery](/docs/recovery/).
+**Daemon management stays on the CLI it already had** — [`plk status`, `plk restart`, `plk logs`](/docs/plk/) — rather than being tools you call. If a run starts failing with `NOT_CONNECTED` or `NO_BROWSER`, shell out to `plk restart` and reconnect; see [Recovery](/docs/recovery/).
