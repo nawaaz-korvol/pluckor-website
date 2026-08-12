@@ -2,7 +2,7 @@
 layout: ../../layouts/Docs.astro
 title: The plk CLI
 kicker: reference
-description: A warm, shared browser. The plk daemon keeps Chrome alive between sessions so you can log in once and let every agent reuse it.
+description: A warm, shared browser. The plk daemon keeps Chrome alive between sessions so you can log in once and let every agent reuse it — and call the tools directly.
 ---
 
 Under the hood there are two pieces: a **daemon** that owns the browser, and the **MCP server** the agent connects to. The daemon means the browser stays warm between sessions, multiple agents can share it, and you can log into sites and watch what's happening.
@@ -19,7 +19,21 @@ plk logs --tail    # follow the daemon log
 plk stop           # close the browser and stop the daemon
 plk restart        # stop then start — recovers a stale or outdated daemon
 plk mcp            # the MCP server the agent spawns (auto-starts the daemon)
+
+plk call <tool> '<json-args>'   # invoke one tool, print its JSON result
+plk pipe                        # a persistent NDJSON session on stdin/stdout
 ```
+
+## Calling the tools without MCP
+
+The last two are for a caller that is a **program** rather than an agent — a Python orchestrator, a job runner, a shell script. They reach the same tools, through the same daemon and the same warm, logged-in browser:
+
+```bash
+plk call navigate '{"url":"https://example.com"}'
+# {"url":"https://example.com","finalUrl":"https://example.com/","settled":true}
+```
+
+`call` is one shot; `pipe` holds a session open so its tabs and their logins survive across requests, and runs requests **concurrently** — ten tabs navigating at once finish in the time of one. Full reference: **[Driving it from code](/docs/cli-api/)**.
 
 ## You don't have to run `plk start`
 
