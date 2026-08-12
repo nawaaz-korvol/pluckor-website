@@ -8,9 +8,9 @@ description: Brain, medium, hands — the agent decides, the bridge carries the 
 Pluckor is three parts in one loop: the **agent** (brain), the **bridge** (medium), and a **real Chrome** (hands).
 
 ```text
-agent  ── MCP/stdio ──▶  plk mcp (proxy)
-                              │  WebSocket (control · :9235)
-                              ▼
+agent   ── MCP/stdio ──▶  plk mcp (proxy)  ─┐
+program ── JSON/NDJSON ─▶  plk call | pipe ─┤  WebSocket (control · :9235)
+                                            ▼
                       plk daemon ──▶ Chrome for Testing + Pluckor extension
                           │                      │
                           │  WebSocket (:9234)   │ content script (reads, no CDP)
@@ -19,7 +19,9 @@ agent  ── MCP/stdio ──▶  plk mcp (proxy)
                                             the live page
 ```
 
-The agent calls a tool → the proxy forwards it to the daemon → the daemon drives the extension → the extension acts on the page and sends the result back the same way. Everything binds to `127.0.0.1`; the browser is never exposed off-box.
+The caller invokes a tool → its front end forwards it to the daemon → the daemon drives the extension → the extension acts on the page and sends the result back the same way. Everything binds to `127.0.0.1`; the browser is never exposed off-box.
+
+There are **two front ends over one daemon**: the MCP proxy an agent spawns, and the [`plk call` / `plk pipe`](/docs/cli-api/) commands a *program* uses. They share one tool registry and one validation path, so a tool behaves identically whichever door it came through — and neither queues. The daemon handles each call independently and the extension dispatches per command, so many tabs can be working at once: several agents on their own `plk mcp`, or one `plk pipe` session driving ten tabs in parallel.
 
 ## Reads vs. interactions
 

@@ -96,6 +96,7 @@ The agent reads these values and decides the next step. There's nothing to scree
 - **[Tools →](/docs/tools/)** — the full reference for the thirty-three browser tools.
 - **[Scripting →](/docs/scripting/)** — replay a known workflow in one call, and know when it breaks.
 - **[The plk CLI →](/docs/plk/)** — keep the browser warm and log in once.
+- **[Driving it from code →](/docs/cli-api/)** — the same tools without MCP, for a Python orchestrator or any program.
 - **[Recovery →](/docs/recovery/)** — when the browser gets stuck, one `restart` brings it back.
 - **[Recipes →](/docs/recipes/)** — real end-to-end extractions.
 - **[Deployment →](/docs/deployment/)** — deploying to a server or container, and driving it remotely.

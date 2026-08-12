@@ -21,6 +21,7 @@ export const docsNav: DocGroup[] = [
       { href: '/docs/tools/', label: 'Tools' },
       { href: '/docs/scripting/', label: 'Scripting' },
       { href: '/docs/plk/', label: 'The plk CLI' },
+      { href: '/docs/cli-api/', label: 'Driving it from code' },
       { href: '/docs/recovery/', label: 'Recovery' },
       { href: '/docs/configuration/', label: 'Configuration' },
       { href: '/docs/deployment/', label: 'Deployment' },
